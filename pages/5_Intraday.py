@@ -1,6 +1,7 @@
 import streamlit as st
 import yfinance as yf
 import numpy as np
+import pandas as pd
 import plotly.graph_objects as go
 from engine.scalogram import track_frequency_flow
 from engine.ui import inject_custom_css
@@ -12,7 +13,7 @@ st.title("📡 Intraday Live Flow")
 st.markdown("Real-time tracking of intraday volatility using Short-Time frequency analysis.")
 
 stock = st.sidebar.text_input("Intraday Symbol (e.g. SPY, ^VIX)", value="SPY")
-timeframe = st.sidebar.selectbox("Candel Aggregation", ["1m", "5m", "15m"], index=0)
+timeframe = st.sidebar.selectbox("Candle Aggregation", ["1m", "5m", "15m"], index=0)
 
 @st.cache_data(ttl=60) # Cache for 60 seconds so we don't spam the API during development
 def load_live_data(symbol, resolution):
@@ -26,8 +27,12 @@ with st.spinner(f"Fetching live numbers for {stock}..."):
     raw_data = load_live_data(stock, timeframe)
 
 if raw_data is not None:
-    # Get the basic price series
-    equity_path = raw_data['Close'].values
+    # Get the basic price series.
+    # Newer yfinance may return MultiIndex columns; flatten to a 1-D array.
+    close_col = raw_data['Close']
+    if isinstance(close_col, pd.DataFrame):
+        close_col = close_col.iloc[:, 0]
+    equity_path = close_col.values
     daily_diff = np.log(equity_path[1:] / equity_path[:-1])
     daily_diff = np.nan_to_num(daily_diff)
     

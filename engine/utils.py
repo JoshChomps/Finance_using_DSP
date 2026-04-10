@@ -3,14 +3,18 @@ import pandas as pd
 
 def calculate_returns(prices, column='Close'):
     """
-    Turns price data into log returns. This makes the data easier to 
+    Turns price data into log returns. This makes the data easier to
     process for signal analysis since it stabilizes the variance.
     """
     if isinstance(prices, pd.DataFrame):
-        target_series = prices[column]
+        col_data = prices[column]
+        # Guard against duplicate columns returning a DataFrame instead of a Series
+        if isinstance(col_data, pd.DataFrame):
+            col_data = col_data.iloc[:, 0]
+        target_series = col_data
     else:
         target_series = prices
-    
+
     returns = np.log(target_series / target_series.shift(1))
     return returns.fillna(0)
 

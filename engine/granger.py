@@ -56,15 +56,17 @@ def analyze_causal_flow(data, maxlag=5, resolution=100):
         h_xy = transfer_matrix[0, 1]
         h_yx = transfer_matrix[1, 0]
         
-        spec_xx = spectrum[0, 0].real
-        spec_yy = spectrum[1, 1].real
-        
-        # Avoid division by zero or negative logs with a small epsilon
+        # Guarantee real positive spectral values (tiny negatives from floating point)
+        spec_xx = max(1e-12, spectrum[0, 0].real)
+        spec_yy = max(1e-12, spectrum[1, 1].real)
+
+        # Avoid division by zero or negative logs with a small epsilon.
+        # Geweke's measure is non-negative by construction; clip any numerical noise.
         denom_yx = spec_xx - (var_y - cov_xy**2/var_x) * np.abs(h_xy)**2
         denom_xy = spec_yy - (var_x - cov_xy**2/var_y) * np.abs(h_yx)**2
-        
-        flow_yx[i] = np.log(spec_xx / max(1e-12, denom_yx))
-        flow_xy[i] = np.log(spec_yy / max(1e-12, denom_xy))
+
+        flow_yx[i] = max(0.0, np.log(spec_xx / max(1e-12, denom_yx)))
+        flow_xy[i] = max(0.0, np.log(spec_yy / max(1e-12, denom_xy)))
 
     return freq_bins, flow_yx, flow_xy
 

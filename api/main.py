@@ -83,13 +83,16 @@ def api_causality(payload: PairRequest):
     aligned_data = pd.concat([r1, r2], axis=1).dropna()
     input_stack = aligned_data.tail(1000).values
     
-    bins, push_yx, push_xy = analyze_causal_flow(input_stack, maxlag=5)
-    
+    # analyze_causal_flow returns (bins, flow_yx, flow_xy):
+    #   flow_yx = Y causes X = second asset (target) causes first (candidate)
+    #   flow_xy = X causes Y = first asset (candidate) causes second (target)
+    bins, flow_target_to_cand, flow_cand_to_target = analyze_causal_flow(input_stack, maxlag=5)
+
     return {
         "candidate": payload.first,
         "target": payload.second,
         "frequencies": bins.tolist(),
-        "causal_strength_fwd": push_yx.tolist(),
-        "causal_strength_bwd": push_xy.tolist()
+        "causal_strength_fwd": flow_cand_to_target.tolist(),
+        "causal_strength_bwd": flow_target_to_cand.tolist()
     }
 

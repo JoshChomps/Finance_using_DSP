@@ -41,12 +41,15 @@ else:
         with st.spinner("Analyzing causal flow..."):
             # Use last 1000 points for stable stats
             input_data = combined.tail(1000).values
-            freq_bins, push_fwd, push_bwd = analyze_causal_flow(input_data, maxlag=max_lags)
-            
+            # analyze_causal_flow returns (bins, flow_yx, flow_xy):
+            #   flow_yx = Y-causes-X = target_asset causes candidate
+            #   flow_xy = X-causes-Y = candidate causes target_asset
+            freq_bins, flow_target_to_cand, flow_cand_to_target = analyze_causal_flow(input_data, maxlag=max_lags)
+
         # 1. Spectral Granger Plot
         fig_gc = go.Figure()
-        fig_gc.add_trace(go.Scatter(x=freq_bins, y=push_fwd, name=f"{candidate} -> {target_asset}", line=dict(color='orange', width=3)))
-        fig_gc.add_trace(go.Scatter(x=freq_bins, y=push_bwd, name=f"{target_asset} -> {candidate}", line=dict(color='blue', width=3)))
+        fig_gc.add_trace(go.Scatter(x=freq_bins, y=flow_cand_to_target, name=f"{candidate} -> {target_asset}", line=dict(color='orange', width=3)))
+        fig_gc.add_trace(go.Scatter(x=freq_bins, y=flow_target_to_cand, name=f"{target_asset} -> {candidate}", line=dict(color='blue', width=3)))
         
         fig_gc.update_layout(
             title="Frequency-based Leadership Strength",
@@ -70,8 +73,11 @@ else:
                 def highlight_significant(val):
                     color = 'green' if val < 0.05 else 'None'
                     return f'background-color: {color}'
-                
-                st.table(p_stats.style.applymap(highlight_significant, subset=['p-value']))
+
+                # Styler.applymap was renamed to Styler.map in pandas 2.1
+                styler = p_stats.style
+                apply_fn = getattr(styler, 'map', None) or styler.applymap
+                st.table(apply_fn(highlight_significant, subset=['p-value']))
                 
         with col2:
             st.subheader("What this means")
@@ -82,7 +88,7 @@ else:
                 - Low frequency (<0.1): Long-term structural or macro leadership.
             
             **Observation:**
-            The strongest leadership from **{candidate}** to **{target_asset}** occurs at the `{freq_bins[np.argmax(push_fwd)]:.3f}` frequency.
+            The strongest leadership from **{candidate}** to **{target_asset}** occurs at the `{freq_bins[np.argmax(flow_cand_to_target)]:.3f}` frequency.
             """)
             
     else:

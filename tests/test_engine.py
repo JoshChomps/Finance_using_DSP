@@ -2,14 +2,18 @@ import pytest
 import pandas as pd
 import numpy as np
 import os
-from engine.data import get_data
+from engine.data import get_data, CACHE_FOLDER
 from engine.utils import calculate_returns, z_score_normalize
 
 def test_data_fetching():
-    # Test with a known symbol already cached
+    """Fetches SPY data. Skips gracefully when no cache and no network."""
     prices = get_data("SPY")
-    assert prices is not None
+    if prices is None:
+        pytest.skip("SPY data unavailable (no cache, no network)")
     assert not prices.empty
+    # Columns must be simple strings, not a MultiIndex
+    assert all(isinstance(c, str) for c in prices.columns), \
+        "columns should be flat strings, not MultiIndex tuples"
     assert "Close" in prices.columns
 
 def test_calculate_returns():

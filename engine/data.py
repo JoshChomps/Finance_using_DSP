@@ -20,14 +20,22 @@ def get_data(symbol, period='5y', interval='1d', use_cache=True):
 
     if use_cache and os.path.exists(file_path):
         print(f"Loading {symbol} from local storage...")
-        return pd.read_parquet(file_path)
+        cached = pd.read_parquet(file_path)
+        if isinstance(cached.columns, pd.MultiIndex):
+            cached.columns = cached.columns.get_level_values(0)
+        return cached
 
     print(f"Downloading {symbol} from yfinance...")
     try:
-        prices = yf.download(symbol, period=period, interval=interval)
+        prices = yf.download(symbol, period=period, interval=interval, progress=False)
         if prices.empty:
             raise ValueError(f"Could not find any data for {symbol}")
-        
+
+        # Newer yfinance (>=0.2.38) returns MultiIndex columns like ('Close', 'SPY').
+        # Flatten to simple column names so downstream code works with both versions.
+        if isinstance(prices.columns, pd.MultiIndex):
+            prices.columns = prices.columns.get_level_values(0)
+
         # Save a local copy for next time
         prices.to_parquet(file_path)
         return prices
@@ -38,7 +46,10 @@ def get_data(symbol, period='5y', interval='1d', use_cache=True):
         for filename in os.listdir(CACHE_FOLDER):
             if filename.startswith(symbol) and filename.endswith(".parquet"):
                 print(f"Using old cache as backup: {filename}")
-                return pd.read_parquet(os.path.join(CACHE_FOLDER, filename))
+                fallback = pd.read_parquet(os.path.join(CACHE_FOLDER, filename))
+                if isinstance(fallback.columns, pd.MultiIndex):
+                    fallback.columns = fallback.columns.get_level_values(0)
+                return fallback
         return None
 
 def pre_cache_list(symbols, period='5y', interval='1d'):
