@@ -78,7 +78,9 @@ else:
         final_returns = raw_rets.tail(sample_size).values
 
         # Price series for the trend filter (last sample_size rows)
-        close_prices = price_data1["Close"].tail(min_size).tail(sample_size).values
+        close_prices = price_data1["Close"].tail(min_size).tail(sample_size)
+        dates = close_prices.index
+        close_prices = close_prices.values
 
         with st.spinner("Analyzing resonance..."):
             resonance_grid, phase, coi, freqs, sig = calculate_coherence(z_score1, z_score2)
@@ -137,11 +139,13 @@ else:
         # ── Growth chart ───────────────────────────────────────────────────────
         fig_curve = go.Figure()
         fig_curve.add_trace(go.Scatter(
+            x=dates,
             y=results["market_curve"],
             name="Buy & Hold",
             line=dict(color="gray", dash="dash"),
         ))
         fig_curve.add_trace(go.Scatter(
+            x=dates,
             y=results["equity_curve"],
             name="DSP Strategy",
             line=dict(color="#00ff9d", width=2),
@@ -149,7 +153,7 @@ else:
         fig_curve.update_layout(
             title="Portfolio Growth Over Time",
             yaxis_title="Profit / Loss",
-            xaxis_title="Time index",
+            xaxis_title="Date",
             height=500,
             paper_bgcolor="rgba(0,0,0,0)",
             plot_bgcolor="rgba(0,0,0,0)",
@@ -163,6 +167,7 @@ else:
 
         fig_sig = go.Figure()
         fig_sig.add_trace(go.Scatter(
+            x=dates,
             y=resonance_grid[selected_idx, :],
             name="Asset Resonance",
             line=dict(color="orange"),
@@ -183,11 +188,11 @@ else:
             ma_series = pd.Series(close_prices).rolling(ma_period).mean()
             fig_trend = go.Figure()
             fig_trend.add_trace(go.Scatter(
-                y=close_prices, name=f"{traded_asset} Price",
+                x=dates, y=close_prices, name=f"{traded_asset} Price",
                 line=dict(color="#4fa3e0"),
             ))
             fig_trend.add_trace(go.Scatter(
-                y=ma_series.values, name=f"{ma_period}-day MA",
+                x=dates, y=ma_series.values, name=f"{ma_period}-day MA",
                 line=dict(color="gold", dash="dot"),
             ))
             fig_trend.update_layout(
@@ -215,7 +220,7 @@ else:
             - **Total Profit vs B&H**: Shows if the active trading outperformed just holding the asset.
             - **Sharpe Ratio**: Measures risk-adjusted return. A Sharpe > 1.0 is good, > 1.5 is excellent.
             - **Worst Drawdown**: The maximum drop from peak to trough. If this is higher than B&H, the strategy is risky.
-            - **Position Size**: If set to Auto, the engine calculates the half-Kelly criterion, preventing the model from betting too much capital on low-edge trades.
+            - **Position Size**: If set to Auto, the engine calculates the half-Kelly criterion. Because broad indices like SPY have very low daily variance compared to their edge in mean-reversion, the Kelly formula typically suggests allocating *more than 100%*. For safety, the engine caps it at a maximum of `100%` (no leverage).
             """)
 
     else:

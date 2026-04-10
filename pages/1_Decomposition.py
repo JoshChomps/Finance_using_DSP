@@ -28,9 +28,10 @@ if data is not None:
     col1, col2 = st.columns([1, 1])
     
     with col1:
+        dates = returns.index
         st.subheader(f"Price Momentum: {symbol}")
         fig_raw = go.Figure()
-        fig_raw.add_trace(go.Scatter(y=returns, name="Daily Returns", line=dict(color='rgba(100, 149, 237, 0.8)')))
+        fig_raw.add_trace(go.Scatter(x=dates, y=returns, name="Daily Returns", line=dict(color='rgba(100, 149, 237, 0.8)')))
         fig_raw.update_layout(
             height=300, 
             margin=dict(l=0, r=0, t=20, b=0),
@@ -59,7 +60,7 @@ if data is not None:
     for i, (band, name) in enumerate(zip(bands, band_names)):
         # Display the most important cycles by default
         is_visible = 'legendonly' if i > 1 else True
-        fig_dwt.add_trace(go.Scatter(y=band, name=name, visible=is_visible))
+        fig_dwt.add_trace(go.Scatter(x=dates, y=band, name=name, visible=is_visible))
     
     fig_dwt.update_layout(
         title="Cycle Decomposition (Total Signal Pieces)", 
@@ -98,14 +99,14 @@ if data is not None:
             
     fig_heat = go.Figure(data=go.Heatmap(
         z=intensity,
-        x=np.arange(len(norm_data)),
+        x=dates,
         y=y_axis,
         colorscale='Viridis',
         showscale=False
     ))
     fig_heat.update_layout(
         title=f"{method} Energy distribution over time",
-        xaxis_title="Time index",
+        xaxis_title="Date",
         yaxis_title=y_label,
         height=500,
         paper_bgcolor="rgba(0,0,0,0)",

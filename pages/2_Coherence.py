@@ -39,6 +39,7 @@ else:
         with st.spinner("Calculating resonance..."):
             # Limit to 750 points for smooth dashboard interaction
             sample_size = 750
+            dates = norm1.tail(sample_size).index
             series1 = norm1.tail(sample_size).values
             series2 = norm2.tail(sample_size).values
             
@@ -47,7 +48,7 @@ else:
         # 1. Coherence Heatmap
         fig_heat = go.Figure(data=go.Heatmap(
             z=resonance_map,
-            x=np.arange(len(series1)),
+            x=dates,
             y=freqs,
             colorscale='Hot',
             showscale=True,
@@ -56,7 +57,7 @@ else:
         
         # Dash line for Cone of Influence
         fig_heat.add_trace(go.Scatter(
-            x=np.arange(len(series1)),
+            x=dates,
             y=1.0/coi, 
             name="Boundary Artifacts",
             line=dict(color='white', dash='dash'),
@@ -65,7 +66,7 @@ else:
 
         fig_heat.update_layout(
             title=f"Wavelet Coherence: {first_sym} vs {second_sym}",
-            xaxis_title="Time index (Days)",
+            xaxis_title="Date",
             yaxis_title="Relative Frequency",
             height=600,
             paper_bgcolor="rgba(0,0,0,0)",
@@ -80,11 +81,14 @@ else:
         
         with col1:
             mean_by_freq = np.mean(resonance_map, axis=1)
+            periods_days = np.array([1 / f if f > 0.001 else 1000 for f in freqs])
+            
             fig_bar = go.Figure()
-            fig_bar.add_trace(go.Bar(x=freqs, y=mean_by_freq))
+            # Frequencies are better plotted with Scatter+fill rather than Bar because they are continuous non-linear
+            fig_bar.add_trace(go.Scatter(x=periods_days, y=mean_by_freq, fill='tozeroy', mode='lines', line=dict(color='#00E676')))
             fig_bar.update_layout(
                 title="Average Strength Per Cycle", 
-                xaxis_title="Frequency", 
+                xaxis_title="Period (Days per Cycle)", 
                 yaxis_title="Strength",
                 paper_bgcolor="rgba(0,0,0,0)",
                 plot_bgcolor="rgba(0,0,0,0)",
