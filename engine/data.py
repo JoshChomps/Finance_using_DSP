@@ -35,6 +35,9 @@ def get_data(symbol, period='5y', interval='1d', use_cache=True):
         # Flatten to simple column names so downstream code works with both versions.
         if isinstance(prices.columns, pd.MultiIndex):
             prices.columns = prices.columns.get_level_values(0)
+            
+        # Deduplicate columns if they exist (sometimes yfinance returns redundant stacks)
+        prices = prices.loc[:, ~prices.columns.duplicated()].copy()
 
         # Save a local copy for next time
         prices.to_parquet(file_path)

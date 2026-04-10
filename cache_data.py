@@ -46,7 +46,7 @@ def main():
         futures = {pool.submit(_fetch, sym): sym for sym in ASSETS}
         for i, fut in enumerate(as_completed(futures), 1):
             sym, ok, elapsed = fut.result()
-            status = "✓" if ok else "✗ FAILED"
+            status = "OK" if ok else "FAILED"
             print(f"  [{i:2d}/{total}] {sym:<10} {status}  ({elapsed:.1f}s)")
             results[sym] = ok
 
@@ -54,8 +54,8 @@ def main():
     passed = sum(results.values())
     failed = [s for s, ok in results.items() if not ok]
 
-    print(f"\n{'─' * 40}")
-    print(f"Done in {wall:.1f}s — {passed}/{total} symbols cached.")
+    print(f"\n{'-' * 40}")
+    print(f"Done in {wall:.1f}s - {passed}/{total} symbols cached.")
     if failed:
         print(f"Failed: {', '.join(failed)}")
         print("These symbols may be delisted or temporarily unavailable.")
