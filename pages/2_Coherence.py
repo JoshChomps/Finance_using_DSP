@@ -10,7 +10,7 @@ from engine.ui import inject_custom_css
 st.set_page_config(page_title="Cross-Asset Resonance | FinSignal Suite", layout="wide")
 inject_custom_css(st)
 
-st.title("🤝 Cross-Asset Resonance")
+st.title("Cross-Asset Resonance")
 
 # Sidebar Controls
 st.sidebar.header("Comparison Settings")
@@ -67,7 +67,10 @@ else:
             title=f"Wavelet Coherence: {first_sym} vs {second_sym}",
             xaxis_title="Time index (Days)",
             yaxis_title="Relative Frequency",
-            height=600
+            height=600,
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(0,0,0,0)",
+            template="plotly_dark"
         )
         st.plotly_chart(fig_heat, use_container_width=True)
         
@@ -79,15 +82,29 @@ else:
             mean_by_freq = np.mean(resonance_map, axis=1)
             fig_bar = go.Figure()
             fig_bar.add_trace(go.Bar(x=freqs, y=mean_by_freq))
-            fig_bar.update_layout(title="Average Strength Per Cycle", xaxis_title="Frequency", yaxis_title="Strength")
+            fig_bar.update_layout(
+                title="Average Strength Per Cycle", 
+                xaxis_title="Frequency", 
+                yaxis_title="Strength",
+                paper_bgcolor="rgba(0,0,0,0)",
+                plot_bgcolor="rgba(0,0,0,0)",
+                template="plotly_dark"
+            )
             st.plotly_chart(fig_bar, use_container_width=True)
             
         with col2:
+            st.subheader("Qualitative Summary")
             st.markdown(f"""
             #### How to read this chart
-            - **Glowing Areas**: Strong resonance. These assets are moving together at these specific cycles.
-            - **Dark Areas**: No connection. The assets are decoupling.
-            - **Dashed V-Shape**: This marks the limit where edge effects might skew the math.
+            - **Glowing Areas**: Strong resonance. {first_sym} and {second_sym} are moving together at these specific cycle speeds.
+            - **Dark Areas**: Complete decoupling. The assets are charting their own separate paths.
+            - **Dashed V-Shape**: The "Cone of Influence". Ignore data outside this cone, as boundary math artifacts can distort the signal.
+            
+            **Note on the Y-Axis (max 0.5):**
+            You might notice the frequency only goes up to `0.5`. This isn't amplitude, it's measuring cycles per day. Due to the "Nyquist Limit" of daily data, the fastest cycle we can mathematically measure takes 2 days to complete (1 cycle / 2 days = 0.5 frequency). To see higher frequencies, you would need intraday data (like the live flow module).
+
+            **Why this matters:**
+            Standard correlation might tell you these assets are 80% correlated over 5 years. But **Wavelet Coherence** tells you *exactly when* and *at what speed*. For example, they might be highly correlated on a macro scale (low frequency) but completely uncoupled on a daily basis (fast noise).
             
             **Quick Stats:**
             - Average Resonance: `{np.mean(resonance_map):.4f}`

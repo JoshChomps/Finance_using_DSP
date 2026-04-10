@@ -10,7 +10,7 @@ from engine.ui import inject_custom_css
 st.set_page_config(page_title="Directional Causality | FinSignal Suite", layout="wide")
 inject_custom_css(st)
 
-st.title("➡️ Directional Causality")
+st.title("Directional Causality")
 
 # Sidebar Controls
 st.sidebar.header("Asset Selection")
@@ -55,7 +55,10 @@ else:
             title="Frequency-based Leadership Strength",
             xaxis_title="Relative Cycle Frequency",
             yaxis_title="Influence Strength",
-            height=500
+            height=500,
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(0,0,0,0)",
+            template="plotly_dark"
         )
         st.plotly_chart(fig_gc, use_container_width=True)
         
@@ -80,15 +83,23 @@ else:
                 st.table(apply_fn(highlight_significant, subset=['p-value']))
                 
         with col2:
-            st.subheader("What this means")
+            st.subheader("Qualitative Summary")
             st.markdown(f"""
-            - **Influence Strength**: Peaks in the graph show the cycles where leadership is strongest.
+            #### How to read this chart
+            - **Influence Strength**: Peaks in the graph show the cycles where information flows strongest from one asset to another.
             - **Frequency Spectrum**:
-                - High frequency (>0.3): Rapid noise or sentiment leadership.
+                - High frequency (>0.3): Rapid noise or sentiment-driven leadership.
                 - Low frequency (<0.1): Long-term structural or macro leadership.
             
+            **Note on the X-Axis (max 0.5):**
+            The cycle frequency caps at `0.5`, representing the mathematics of the "Nyquist limit". Because we are feeding the engine 1 data point per day, the absolute fastest oscillation we can measure takes exactly 2 days to cycle (1 cycle / 2 days = 0.5).
+
+            **Why Spectral Causality?**
+            Standard models just ask: *Does {candidate} move before {target_asset}?* 
+            Spectral Granger Causality asks a better question: *Does {candidate} lead {target_asset} during weekly swings, or does it only lead during massive macro trends?* This allows you to build frequency-specific trading pairs.
+            
             **Observation:**
-            The strongest leadership from **{candidate}** to **{target_asset}** occurs at the `{freq_bins[np.argmax(flow_cand_to_target)]:.3f}` frequency.
+            The strongest leadership from **{candidate}** to **{target_asset}** occurs at the `{freq_bins[np.argmax(flow_cand_to_target)]:.3f}` frequency. 
             """)
             
     else:

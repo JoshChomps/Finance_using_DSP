@@ -10,11 +10,28 @@ from engine.ui import inject_custom_css
 st.set_page_config(page_title="Intraday Live Flow | FinSignal Suite", layout="wide")
 inject_custom_css(st)
 
-st.title("📡 Intraday Live Flow")
+st.title("Intraday Live Flow")
 st.markdown("Real-time tracking of intraday volatility using Short-Time frequency analysis.")
 
-stock     = st.sidebar.text_input("Intraday Symbol (e.g. SPY, ^VIX)", value="SPY")
+stock     = st.sidebar.text_input("Intraday Symbol", value="SPY")
 timeframe = st.sidebar.selectbox("Candle Aggregation", ["1m", "5m", "15m"], index=0)
+
+st.sidebar.markdown("---")
+with st.sidebar.expander("📝 Popular Intraday Symbols"):
+    st.markdown("""
+    **Indices & Broad Market**
+    - `SPY` (S&P 500)
+    - `QQQ` (Nasdaq 100)
+    - `^VIX` (Volatility Index)
+    
+    **Big Tech**
+    - `AAPL`, `MSFT`, `NVDA`
+    - `TSLA`, `AMZN`, `META`
+    
+    **Crypto (24/7)**
+    - `BTC-USD`
+    - `ETH-USD`
+    """)
 
 
 def _market_status():
@@ -93,6 +110,9 @@ if raw_data is not None:
         xaxis_title="Time Blocks",
         yaxis_title="Relative Frequency",
         height=500,
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        template="plotly_dark"
     )
     st.plotly_chart(fig_stft, use_container_width=True)
 
@@ -102,8 +122,26 @@ if raw_data is not None:
         y=equity_path, mode="lines", name="Price",
         line=dict(color="#00ff9d"),
     ))
-    fig_price.update_layout(title="Intraday Price History", height=300)
+    fig_price.update_layout(
+        title="Intraday Price History", 
+        height=300,
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        template="plotly_dark"
+    )
     st.plotly_chart(fig_price, use_container_width=True)
+
+    st.divider()
+    with st.expander("📖 Interpreting the Intraday Flow", expanded=True):
+        st.markdown(f"""
+        #### Qualitative Summary
+        Traditional day-trading uses highly lagging indicators like VWAP or RSI. The **Intraday Live Flow** module processes real-time volatility directly using Short-Time frequency analysis to give you a true "x-ray" of the day's action.
+
+        **How to read the Spectrogram:**
+        - **The Bright Yellow Pillars**: These are massive, sudden bursts of volume and volatility crossing multiple frequencies at once. This usually happens right at the market open, during Powell speeches, or major data drops (CPI/NFP). 
+        - **High-Frequency Bands (Top Half)**: Steady glow here means the market is highly algorithmic right now—lots of choppy, fast-paced micro-trading. Not a great environment for long holds.
+        - **Low-Frequency Bands (Bottom Half)**: Glowing energy here indicates a strong, sustained institutional wave is forming. This implies a powerful directional trend is developing for the day.
+        """)
 
     st.info(
         "💡 **Pro Tip**: In a production setup this would be wired to a real-time "

@@ -23,7 +23,7 @@ Getting the engine running on your local machine takes about 3 minutes.
 
 3. **Launch the Dashboard**:
    ```powershell
-   streamlit run app.py
+   streamlit run 0_Home.py
    ```
 
 4. **Launch the REST API**:

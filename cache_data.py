@@ -41,14 +41,11 @@ def main():
     results = {}
     start = time.time()
 
-    # Download up to 6 symbols concurrently — Yahoo is usually fine with this
-    with ThreadPoolExecutor(max_workers=6) as pool:
-        futures = {pool.submit(_fetch, sym): sym for sym in ASSETS}
-        for i, fut in enumerate(as_completed(futures), 1):
-            sym, ok, elapsed = fut.result()
-            status = "OK" if ok else "FAILED"
-            print(f"  [{i:2d}/{total}] {sym:<10} {status}  ({elapsed:.1f}s)")
-            results[sym] = ok
+    for i, sym in enumerate(ASSETS, 1):
+        sym, ok, elapsed = _fetch(sym)
+        status = "OK" if ok else "FAILED"
+        print(f"  [{i:2d}/{total}] {sym:<10} {status}  ({elapsed:.1f}s)")
+        results[sym] = ok
 
     wall = time.time() - start
     passed = sum(results.values())

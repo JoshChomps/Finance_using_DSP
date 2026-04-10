@@ -16,7 +16,7 @@ from engine.ui import inject_custom_css
 st.set_page_config(page_title="Backtesting Simulator | FinSignal Suite", layout="wide")
 inject_custom_css(st)
 
-st.title("📈 Backtesting Simulator")
+st.title("Backtesting Simulator")
 st.markdown("Test trading strategies derived from cross-asset resonance signals.")
 
 # ── Sidebar ────────────────────────────────────────────────────────────────────
@@ -151,6 +151,9 @@ else:
             yaxis_title="Profit / Loss",
             xaxis_title="Time index",
             height=500,
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(0,0,0,0)",
+            template="plotly_dark"
         )
         st.plotly_chart(fig_curve, use_container_width=True)
 
@@ -169,6 +172,9 @@ else:
         fig_sig.update_layout(
             title=f"Coherence Level at {freqs[selected_idx]:.3f} Hz",
             height=300,
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(0,0,0,0)",
+            template="plotly_dark"
         )
         st.plotly_chart(fig_sig, use_container_width=True)
 
@@ -187,8 +193,30 @@ else:
             fig_trend.update_layout(
                 title=f"Price vs {ma_period}-Day Moving Average (Trend Filter)",
                 height=300,
+                paper_bgcolor="rgba(0,0,0,0)",
+                plot_bgcolor="rgba(0,0,0,0)",
+                template="plotly_dark"
             )
             st.plotly_chart(fig_trend, use_container_width=True)
+
+        st.divider()
+        with st.expander("📖 Interpreting the Backtest Results", expanded=True):
+            st.markdown(f"""
+            #### Qualitative Summary
+            This simulator tests the viability of trading **{traded_asset}** by measuring its phase-alignment (resonance) with **{signal_source}**.
+
+            **What is it doing?**
+            1. It isolates a specific frequency band (e.g., Weekly cycles).
+            2. It tracks the resonance between the two assets at that exact frequency.
+            3. When the coherence breaks the **Lower Barrier**, it buys {traded_asset} (anticipating a reversion or catch-up).
+            4. When the coherence hits the **Upper Barrier**, it closes the position (neutral/sell).
+            
+            **Understanding the Metrics:**
+            - **Total Profit vs B&H**: Shows if the active trading outperformed just holding the asset.
+            - **Sharpe Ratio**: Measures risk-adjusted return. A Sharpe > 1.0 is good, > 1.5 is excellent.
+            - **Worst Drawdown**: The maximum drop from peak to trough. If this is higher than B&H, the strategy is risky.
+            - **Position Size**: If set to Auto, the engine calculates the half-Kelly criterion, preventing the model from betting too much capital on low-edge trades.
+            """)
 
     else:
         st.error("Ran into trouble loading the price history.")
