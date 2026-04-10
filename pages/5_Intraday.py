@@ -97,18 +97,22 @@ if raw_data is not None:
     freqs, times, intensity_z = track_frequency_flow(daily_diff, sample_rate=1.0, window_size=block_size)
     intensity = np.abs(intensity_z)
 
+    # Map Scipy matrix block indices to actual real-world DateTimes
+    mapped_times = raw_data.index[np.clip(np.round(times).astype(int), 0, len(raw_data)-1)]
+
     # Intraday spectrogram
     fig_stft = go.Figure(data=go.Heatmap(
         z=intensity,
-        x=times,
+        x=mapped_times,
         y=freqs,
         colorscale="Inferno",
         showscale=True,
+        hovertemplate='<b>Time:</b> %{x|%I:%M %p}<br><b>Frequency Scale:</b> %{y:.3f}<br><b>Volatility Heat:</b> %{z:.3f}<extra></extra>'
     ))
     fig_stft.update_layout(
         title=f"Rolling frequency map ({timeframe} candles)",
-        xaxis_title="Time Blocks",
-        yaxis_title="Relative Frequency",
+        xaxis_title="Timeline",
+        yaxis_title="Market Chop Speed (Frequency)",
         height=500,
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
@@ -137,10 +141,15 @@ if raw_data is not None:
         #### Qualitative Summary
         Traditional day-trading uses highly lagging indicators like VWAP or RSI. The **Intraday Live Flow** module processes real-time volatility directly using Short-Time frequency analysis to give you a true "x-ray" of the day's action.
 
-        **How to read the Spectrogram:**
+        **Understanding the Graph Axes:**
+        - **X-Axis (Horizontal)**: The actual time of the trading day.
+        - **Y-Axis (Vertical)**: The speed/frequency of market chop. High up means extremely fast micro-noise. Lower down means slower, bigger waves of momentum.
+        - **Color (Heat)**: Bright Yellow means massive market energy/volatility. Dark purple means the market is entirely flat and asleep.
+
+        **How to actually trade using this:**
         - **The Bright Yellow Pillars**: These are massive, sudden bursts of volume and volatility crossing multiple frequencies at once. This usually happens right at the market open, during Powell speeches, or major data drops (CPI/NFP). 
         - **High-Frequency Bands (Top Half)**: Steady glow here means the market is highly algorithmic right now—lots of choppy, fast-paced micro-trading. Not a great environment for long holds.
-        - **Low-Frequency Bands (Bottom Half)**: Glowing energy here indicates a strong, sustained institutional wave is forming. This implies a powerful directional trend is developing for the day.
+        - **Low-Frequency Bands (Bottom Half)**: Glowing energy here indicates a strong, sustained institutional wave is forming. This implies a powerful directional trend is developing for the day. If you are day-trading, you want to trade in the direction of the price movement when you see the bottom half light up.
         """)
 
     st.info(
