@@ -1,0 +1,13 @@
+streamlit>=1.32.0
+numpy>=1.24.0
+pandas>=2.0.0
+scipy>=1.11.0
+PyWavelets>=1.5.0
+pycwt>=0.4.0b0
+ssqueezepy>=0.6.6
+plotly>=5.18.0
+yfinance>=0.2.36
+statsmodels>=0.14.0
+finnhub-python>=2.4.19
+pyarrow>=14.0.0
+pytest>=8.0.0
