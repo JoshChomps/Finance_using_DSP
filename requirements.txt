@@ -8,7 +8,6 @@ ssqueezepy>=0.6.6
 plotly>=5.18.0
 yfinance>=0.2.36
 statsmodels>=0.14.0
-finnhub-python>=2.4.19
 pyarrow>=14.0.0
 pytest>=8.0.0
 httpx>=0.24.0
