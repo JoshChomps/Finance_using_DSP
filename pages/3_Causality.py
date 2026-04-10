@@ -48,8 +48,14 @@ else:
 
         # 1. Spectral Granger Plot
         fig_gc = go.Figure()
-        fig_gc.add_trace(go.Scatter(x=freq_bins, y=flow_cand_to_target, name=f"{candidate} -> {target_asset}", line=dict(color='orange', width=3)))
-        fig_gc.add_trace(go.Scatter(x=freq_bins, y=flow_target_to_cand, name=f"{target_asset} -> {candidate}", line=dict(color='blue', width=3)))
+        fig_gc.add_trace(go.Scatter(
+            x=freq_bins, y=flow_cand_to_target, name=f"{candidate} -> {target_asset}", line=dict(color='orange', width=3),
+            hovertemplate='<b>Frequency:</b> %{x:.3f}<br><b>Causal Power:</b> %{y:.4f}<extra></extra>'
+        ))
+        fig_gc.add_trace(go.Scatter(
+            x=freq_bins, y=flow_target_to_cand, name=f"{target_asset} -> {candidate}", line=dict(color='blue', width=3),
+            hovertemplate='<b>Frequency:</b> %{x:.3f}<br><b>Causal Power:</b> %{y:.4f}<extra></extra>'
+        ))
         
         fig_gc.update_layout(
             title="Frequency-based Leadership Strength",

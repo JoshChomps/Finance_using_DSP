@@ -143,12 +143,14 @@ else:
             y=results["market_curve"],
             name="Buy & Hold",
             line=dict(color="gray", dash="dash"),
+            hovertemplate='<b>Date:</b> %{x|%b %d, %Y}<br><b>B&H P/L:</b> %{y:.2%}<extra></extra>'
         ))
         fig_curve.add_trace(go.Scatter(
             x=dates,
             y=results["equity_curve"],
             name="DSP Strategy",
             line=dict(color="#00ff9d", width=2),
+            hovertemplate='<b>Date:</b> %{x|%b %d, %Y}<br><b>Strategy P/L:</b> %{y:.2%}<extra></extra>'
         ))
         fig_curve.update_layout(
             title="Portfolio Growth Over Time",
@@ -171,6 +173,7 @@ else:
             y=resonance_grid[selected_idx, :],
             name="Asset Resonance",
             line=dict(color="orange"),
+            hovertemplate='<b>Date:</b> %{x|%b %d, %Y}<br><b>Coherence Level:</b> %{y:.4f}<extra></extra>'
         ))
         fig_sig.add_hline(y=high_limit, line_dash="dash", line_color="red",   annotation_text="Upper Barrier")
         fig_sig.add_hline(y=low_limit,  line_dash="dash", line_color="green", annotation_text="Lower Barrier")
@@ -190,10 +193,12 @@ else:
             fig_trend.add_trace(go.Scatter(
                 x=dates, y=close_prices, name=f"{traded_asset} Price",
                 line=dict(color="#4fa3e0"),
+                hovertemplate='<b>Date:</b> %{x|%b %d, %Y}<br><b>Price:</b> $%{y:.2f}<extra></extra>'
             ))
             fig_trend.add_trace(go.Scatter(
                 x=dates, y=ma_series.values, name=f"{ma_period}-day MA",
                 line=dict(color="gold", dash="dot"),
+                hovertemplate='<b>Date:</b> %{x|%b %d, %Y}<br><b>MA:</b> $%{y:.2f}<extra></extra>'
             ))
             fig_trend.update_layout(
                 title=f"Price vs {ma_period}-Day Moving Average (Trend Filter)",

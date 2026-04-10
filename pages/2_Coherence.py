@@ -45,14 +45,14 @@ else:
             
             resonance_map, phase, coi, freqs, sig = calculate_coherence(series1, series2)
             
-        # 1. Coherence Heatmap
         fig_heat = go.Figure(data=go.Heatmap(
             z=resonance_map,
             x=dates,
             y=freqs,
             colorscale='Hot',
             showscale=True,
-            colorbar=dict(title="Resonance")
+            colorbar=dict(title="Resonance"),
+            hovertemplate='<b>Date:</b> %{x|%b %d, %Y}<br><b>Frequency:</b> %{y:.3f}<br><b>Resonance:</b> %{z:.3f}<extra></extra>'
         ))
         
         # Dash line for Cone of Influence
@@ -61,7 +61,8 @@ else:
             y=1.0/coi, 
             name="Boundary Artifacts",
             line=dict(color='white', dash='dash'),
-            showlegend=False
+            showlegend=False,
+            hoverinfo='skip'
         ))
 
         fig_heat.update_layout(
@@ -85,7 +86,10 @@ else:
             
             fig_bar = go.Figure()
             # Frequencies are better plotted with Scatter+fill rather than Bar because they are continuous non-linear
-            fig_bar.add_trace(go.Scatter(x=periods_days, y=mean_by_freq, fill='tozeroy', mode='lines', line=dict(color='#00E676')))
+            fig_bar.add_trace(go.Scatter(
+                x=periods_days, y=mean_by_freq, fill='tozeroy', mode='lines', line=dict(color='#00E676'),
+                hovertemplate='<b>Cycle Period:</b> %{x:.1f} Days<br><b>Avg Strength:</b> %{y:.4f}<extra></extra>'
+            ))
             fig_bar.update_layout(
                 title="Average Strength Per Cycle", 
                 xaxis_title="Period (Days per Cycle)", 

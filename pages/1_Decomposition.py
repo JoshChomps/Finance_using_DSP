@@ -33,7 +33,8 @@ if data is not None:
     fig_raw = go.Figure()
     fig_raw.add_trace(go.Scatter(
         x=dates, y=cumulative_growth, name="Growth", 
-        line=dict(color='rgba(100, 149, 237, 0.8)'), fill='tozeroy'
+        line=dict(color='rgba(100, 149, 237, 0.8)'), fill='tozeroy',
+        hovertemplate='<b>Date:</b> %{x|%b %d, %Y}<br><b>Total Growth:</b> %{y:.2%}<extra></extra>'
     ))
     fig_raw.update_layout(
         height=400, 
@@ -62,9 +63,11 @@ if data is not None:
     
     fig_dwt = go.Figure()
     for i, (band, name) in enumerate(zip(bands, band_names)):
-        # Display the most important cycles by default
-        is_visible = 'legendonly' if i > 1 else True
-        fig_dwt.add_trace(go.Scatter(x=dates, y=band, name=name, visible=is_visible))
+        # Make all cycles visible so the depth slider has an immediate visual impact
+        fig_dwt.add_trace(go.Scatter(
+            x=dates, y=band, name=name, visible=True,
+            hovertemplate=f'<b>Date:</b> %{{x|%b %d, %Y}}<br><b>Cycle:</b> {name}<br><b>Momentum:</b> %{{y:.4f}}<extra></extra>'
+        ))
     
     fig_dwt.update_layout(
         title="Cycle Decomposition (Total Signal Pieces)", 
@@ -106,7 +109,8 @@ if data is not None:
         x=dates,
         y=y_axis,
         colorscale='Viridis',
-        showscale=False
+        showscale=False,
+        hovertemplate='<b>Date:</b> %{x|%b %d, %Y}<br><b>Scale/Freq:</b> %{y:.3f}<br><b>Volatility:</b> %{z:.3f}<extra></extra>'
     ))
     fig_heat.update_layout(
         title=f"{method} Energy distribution over time",
