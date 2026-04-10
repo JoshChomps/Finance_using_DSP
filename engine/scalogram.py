@@ -3,41 +3,40 @@ import pandas as pd
 from ssqueezepy import cwt, ssq_cwt, Wavelet
 from scipy.signal import stft, welch
 
-def compute_cwt(signal, wavelet='morlet'):
+def run_cwt_analysis(signal, wavelet='morlet'):
     """
-    Compute Continuous Wavelet Transform (CWT).
-    Returns (Wx, scales)
+    Continuous Wavelet Transform (CWT).
+    Helps us see how the frequency content of a stock changes over time.
     """
-    # ssqueezepy cwt expects a wavelet object or string
-    Wx, scales = cwt(signal, wavelet)
-    return Wx, scales
+    map_complex, scales = cwt(signal, wavelet)
+    return map_complex, scales
 
-def compute_ssq_cwt(signal, wavelet='morlet'):
+def run_synchrosqueezing(signal, wavelet='morlet'):
     """
-    Compute Synchrosqueezed Continuous Wavelet Transform (SSQ-CWT).
-    Returns (Tx, Wx, ssq_freqs, scales)
+    A more advanced version of wavelet analysis that "tightens up" 
+    the energy to give us sharper frequency resolution.
     """
-    Tx, Wx, ssq_freqs, scales = ssq_cwt(signal, wavelet)
-    return Tx, Wx, ssq_freqs, scales
+    tight_map, raw_map, ssq_freqs, scales = ssq_cwt(signal, wavelet)
+    return tight_map, raw_map, ssq_freqs, scales
 
-def compute_stft(signal, fs=1.0, nperseg=64):
+def track_frequency_flow(signal, sample_rate=1.0, window_size=64):
     """
-    Compute Short-Time Fourier Transform (STFT).
-    Returns (f, t, Zxx)
+    Short-Time Fourier Transform (STFT). 
+    Useful for seeing quick shifts in volatility and noise patterns.
     """
-    f, t, Zxx = stft(signal, fs=fs, nperseg=nperseg)
-    return f, t, Zxx
+    freqs, times, map_z = stft(signal, fs=sample_rate, nperseg=window_size)
+    return freqs, times, map_z
 
-def compute_psd(signal, fs=1.0):
+def estimate_power_spectrum(signal, sample_rate=1.0):
     """
-    Compute Power Spectral Density (PSD) using Welch's method.
-    Returns (f, Pxx)
+    Estimates which frequencies hold the most energy in the signal.
     """
-    f, Pxx = welch(signal, fs=fs)
-    return f, Pxx
+    freqs, energy_density = welch(signal, fs=sample_rate)
+    return freqs, energy_density
 
-def get_magnitude(complex_coeffs):
+def get_magnitude(complex_data):
     """
-    Return the magnitude of complex transform coefficients.
+    Just a helper to get the absolute value (intensity) of complex numbers.
     """
-    return np.abs(complex_coeffs)
+    return np.abs(complex_data)
+

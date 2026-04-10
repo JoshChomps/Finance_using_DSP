@@ -3,46 +3,50 @@ import pandas as pd
 import yfinance as yf
 from datetime import datetime, timedelta
 
-DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data', 'cache')
+# Where we store our local market data downloads
+# Allow override via environment variable for production/Docker environments
+DEFAULT_CACHE = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data', 'cache')
+CACHE_FOLDER = os.getenv('FIN_DATA_CACHE', DEFAULT_CACHE)
 
-def get_data(ticker, period='5y', interval='1d', use_cache=True):
+def get_data(symbol, period='5y', interval='1d', use_cache=True):
     """
-    Fetch historical data for a given ticker.
-    Uses local cache if available and requested.
+    Grabs historical price data. We check the local cache first to save time 
+    and avoid hitting rate limits.
     """
-    if not os.path.exists(DATA_DIR):
-        os.makedirs(DATA_DIR)
+    if not os.path.exists(CACHE_FOLDER):
+        os.makedirs(CACHE_FOLDER)
 
-    file_path = os.path.join(DATA_DIR, f"{ticker}_{period}_{interval}.parquet")
+    file_path = os.path.join(CACHE_FOLDER, f"{symbol}_{period}_{interval}.parquet")
 
     if use_cache and os.path.exists(file_path):
-        print(f"Loading {ticker} from cache...")
+        print(f"Loading {symbol} from local storage...")
         return pd.read_parquet(file_path)
 
-    print(f"Fetching {ticker} from yfinance...")
+    print(f"Downloading {symbol} from yfinance...")
     try:
-        data = yf.download(ticker, period=period, interval=interval)
-        if data.empty:
-            raise ValueError(f"No data found for ticker {ticker}")
+        prices = yf.download(symbol, period=period, interval=interval)
+        if prices.empty:
+            raise ValueError(f"Could not find any data for {symbol}")
         
-        # Ensure data is saved in a consistent format
-        data.to_parquet(file_path)
-        return data
+        # Save a local copy for next time
+        prices.to_parquet(file_path)
+        return prices
     except Exception as e:
-        print(f"Error fetching data for {ticker}: {e}")
-        # Try to find any existing cache for this ticker as fallback
-        for file in os.listdir(DATA_DIR):
-            if file.startswith(ticker) and file.endswith(".parquet"):
-                print(f"Fallback: Loading alternative cache for {ticker} from {file}")
-                return pd.read_parquet(os.path.join(DATA_DIR, file))
+        print(f"Oops, ran into an issue fetching {symbol}: {e}")
+        
+        # Last ditch effort: try to find any existing file for this asset
+        for filename in os.listdir(CACHE_FOLDER):
+            if filename.startswith(symbol) and filename.endswith(".parquet"):
+                print(f"Using old cache as backup: {filename}")
+                return pd.read_parquet(os.path.join(CACHE_FOLDER, filename))
         return None
 
-def pre_cache_tickers(tickers, period='5y', interval='1d'):
+def pre_cache_list(symbols, period='5y', interval='1d'):
     """
-    Download and cache data for a list of tickers.
+    Helper to bulk download a list of assets.
     """
-    results = {}
-    for ticker in tickers:
-        data = get_data(ticker, period=period, interval=interval)
-        results[ticker] = data is not None
-    return results
+    status = {}
+    for sym in symbols:
+        data = get_data(sym, period=period, interval=interval)
+        status[sym] = data is not None
+    return status

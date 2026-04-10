@@ -1,18 +1,18 @@
-from engine.data import pre_cache_tickers
+from engine.data import pre_cache_list
 import os
 
-# Essential tickers according to plan.md
-tickers = [
-    'SPY', 'QQQ', 'GLD', 'TLT',  # Asset classes
+# Assets we want to have ready for the dashboard
+assets = [
+    'SPY', 'QQQ', 'GLD', 'TLT',  # Major classes
     'AAPL', 'MSFT', 'NVDA', 'TSLA', 'AMZN', 'META',  # Big Tech
-    'XLE', 'XLF', 'XLK', 'XLV',  # Sectors
-    'BTC-USD', 'ETH-USD', # Crypto
-    'JPM', 'V', 'PG', 'UNH' # Blue chip
+    'XLE', 'XLF', 'XLK', 'XLV',  # Sector ETFs
+    'BTC-USD', 'ETH-USD', # Crypto basics
+    'JPM', 'V', 'PG', 'UNH' # Institutional blue chips
 ]
 
 if __name__ == "__main__":
-    print(f"Starting pre-caching for {len(tickers)} tickers...")
-    results = pre_cache_tickers(tickers)
-    for ticker, success in results.items():
-        status = "Success" if success else "Failed"
-        print(f"{ticker}: {status}")
+    print(f"Pre-loading {len(assets)} assets into local storage...")
+    status_map = pre_cache_list(assets)
+    for sym, success in status_map.items():
+        outcome = "Done" if success else "Failed"
+        print(f"{sym}: {outcome}")

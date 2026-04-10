@@ -3,29 +3,28 @@ import pandas as pd
 import numpy as np
 import os
 from engine.data import get_data
-from engine.utils import compute_log_returns, normalize_signal
+from engine.utils import calculate_returns, z_score_normalize
 
 def test_data_fetching():
-    # Test with a known ticker already cached
-    df = get_data("SPY")
-    assert df is not None
-    assert not df.empty
-    assert "Close" in df.columns
+    # Test with a known symbol already cached
+    prices = get_data("SPY")
+    assert prices is not None
+    assert not prices.empty
+    assert "Close" in prices.columns
 
-def test_log_returns():
-    data = pd.Series([100, 110, 121])
-    returns = compute_log_returns(data)
+def test_calculate_returns():
+    history = pd.Series([100, 110, 121])
+    returns = calculate_returns(history)
     # log(1.1) approx 0.0953
-    # log(1.21/1.1) = log(1.1)
     assert len(returns) == 3
     assert returns[0] == 0
     assert np.isclose(returns[1], np.log(1.1))
 
-def test_normalization():
-    signal = np.array([1, 2, 3, 4, 5])
-    norm = normalize_signal(signal)
-    assert np.isclose(np.mean(norm), 0)
-    assert np.isclose(np.std(norm), 1)
+def test_z_score_normalization():
+    raw_signal = np.array([1, 2, 3, 4, 5])
+    standardized = z_score_normalize(raw_signal)
+    assert np.isclose(np.mean(standardized), 0)
+    assert np.isclose(np.std(standardized), 1)
 
 if __name__ == "__main__":
     pytest.main([__file__])

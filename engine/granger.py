@@ -3,81 +3,76 @@ import pandas as pd
 from statsmodels.tsa.vector_ar.var_model import VAR
 from statsmodels.tsa.stattools import grangercausalitytests
 
-def compute_time_domain_granger(data, maxlag=5):
+def check_standard_causality(data, lags=5):
     """
-    Compute standard time-domain Granger causality.
-    Returns a dictionary of p-values.
+    Checks if one series predicts the future of another using 
+    standard time-domain regression.
     """
-    results = grangercausalitytests(data, maxlag=maxlag, verbose=False)
-    # Extract p-values for the F-test (usually index 0 in the test result tuple)
-    p_values = {lag: results[lag][0]['ssr_ftest'][1] for lag in results}
-    return p_values
+    test_results = grangercausalitytests(data, maxlag=lags, verbose=False)
+    # just pull out the p-values for the main test
+    results_map = {lag: test_results[lag][0]['ssr_ftest'][1] for lag in test_results}
+    return results_map
 
-def compute_spectral_granger(data, maxlag=5, n_freqs=100):
+def analyze_causal_flow(data, maxlag=5, resolution=100):
     """
-    Compute frequency-domain Granger causality (Geweke 1982).
-    Input: data (2D array [T, 2])
-    Output: freqs, G_yx (y leads x), G_xy (x leads y)
+    Measures the strength of leadership between two assets across 
+    different cycles (frequencies).
     """
-    T, N = data.shape
-    if N != 2:
-        raise ValueError("Spectral Granger currently only supports bivariate analysis (2 variables).")
+    rows, cols = data.shape
+    if cols != 2:
+        raise ValueError("We only support comparing two variables right now.")
 
-    # 1. Fit VAR model
-    model = VAR(data)
-    results = model.fit(maxlag)
-    p = results.k_ar
+    # 1. Fit the Vector Auto-Regression model
+    var_model = VAR(data)
+    fit_result = var_model.fit(maxlag)
+    lag_order = fit_result.k_ar
     
-    # Coefficients and residual covariance
-    # coefs: [p, N, N]
-    coefs = results.coefs
-    sigma = results.sigma_u # Already a numpy array
+    # Grab the model coefficients and the errors
+    coefficients = fit_result.coefs
+    resid_cov = fit_result.sigma_u
     
-    # 2. Setup frequency range
-    freqs = np.linspace(0, 0.5, n_freqs) # Normalized frequency [0, 0.5]
+    # 2. Setup the frequency range (normalized 0 to 0.5)
+    freq_bins = np.linspace(0, 0.5, resolution)
     
-    g_yx = np.zeros(n_freqs)
-    g_xy = np.zeros(n_freqs)
+    flow_yx = np.zeros(resolution)
+    flow_xy = np.zeros(resolution)
     
-    for i, f in enumerate(freqs):
-        # 3. Compute Transfer Function H(f)
-        # H(f) = (I - sum(A_k * exp(-i*2*pi*f*k)))^-1
-        A_f = np.eye(N, dtype=complex)
-        for k in range(1, p + 1):
-            A_f -= coefs[k-1] * np.exp(-1j * 2 * np.pi * f * k)
+    for i, f in enumerate(freq_bins):
+        # 3. Calculate the Transfer Function H at this frequency
+        identity = np.eye(cols, dtype=complex)
+        for k in range(1, lag_order + 1):
+            identity -= coefficients[k-1] * np.exp(-1j * 2 * np.pi * f * k)
         
-        H = np.linalg.inv(A_f)
+        transfer_matrix = np.linalg.inv(identity)
         
-        # 4. Compute Spectral Matrix S(f)
-        S = H @ sigma @ H.conj().T
+        # 4. Get the Spectral Density Matrix
+        spectrum = transfer_matrix @ resid_cov @ transfer_matrix.conj().T
         
-        # 5. Compute Geweke measure (bivariate formulation)
-        # G_y->x(f)
-        # Formula: ln( S_xx / (S_xx - (sig_yy - sig_xy^2/sig_xx) * |H_xy|^2) )
-        sig_xx = sigma[0, 0]
-        sig_yy = sigma[1, 1]
-        sig_xy = sigma[0, 1]
+        # 5. Geweke's measure of causality
+        var_x = resid_cov[0, 0]
+        var_y = resid_cov[1, 1]
+        cov_xy = resid_cov[0, 1]
         
-        h_xy = H[0, 1]
-        h_yx = H[1, 0]
+        h_xy = transfer_matrix[0, 1]
+        h_yx = transfer_matrix[1, 0]
         
-        s_xx = S[0, 0].real
-        s_yy = S[1, 1].real
+        spec_xx = spectrum[0, 0].real
+        spec_yy = spectrum[1, 1].real
         
-        # Ensure values stay within valid ranges for log
-        denom_yx = s_xx - (sig_yy - sig_xy**2/sig_xx) * np.abs(h_xy)**2
-        denom_xy = s_yy - (sig_xx - sig_xy**2/sig_yy) * np.abs(h_yx)**2
+        # Avoid division by zero or negative logs with a small epsilon
+        denom_yx = spec_xx - (var_y - cov_xy**2/var_x) * np.abs(h_xy)**2
+        denom_xy = spec_yy - (var_x - cov_xy**2/var_y) * np.abs(h_yx)**2
         
-        g_yx[i] = np.log(s_xx / max(1e-12, denom_yx))
-        g_xy[i] = np.log(s_yy / max(1e-12, denom_xy))
+        flow_yx[i] = np.log(spec_xx / max(1e-12, denom_yx))
+        flow_xy[i] = np.log(spec_yy / max(1e-12, denom_xy))
 
-    return freqs, g_yx, g_xy
+    return freq_bins, flow_yx, flow_xy
 
-def get_causality_interpretation(p_values, threshold=0.05):
+def interpret_causality(p_values, limit=0.05):
     """
-    Convert p-values to a human-readable interpretation.
+    Translates raw p-values into a simple sentence.
     """
-    significant_lags = [lag for lag, p in p_values.items() if p < threshold]
-    if significant_lags:
-        return f"Significant causality detected at lags: {significant_lags}"
-    return "No significant time-domain causality detected."
+    leads = [lag for lag, p in p_values.items() if p < limit]
+    if leads:
+        return f"Statistically significant leadership found at lags: {leads}"
+    return "No clear leadership detected in this window."

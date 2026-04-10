@@ -1,29 +1,31 @@
 import numpy as np
 import pandas as pd
 
-def compute_log_returns(data, column='Close'):
+def calculate_returns(prices, column='Close'):
     """
-    Compute log returns for a given price series.
-    Returns a Series with the first element as 0 or NaN.
+    Turns price data into log returns. This makes the data easier to 
+    process for signal analysis since it stabilizes the variance.
     """
-    if isinstance(data, pd.DataFrame):
-        prices = data[column]
+    if isinstance(prices, pd.DataFrame):
+        target_series = prices[column]
     else:
-        prices = data
+        target_series = prices
     
-    log_returns = np.log(prices / prices.shift(1))
-    return log_returns.fillna(0)
+    returns = np.log(target_series / target_series.shift(1))
+    return returns.fillna(0)
 
-def normalize_signal(signal):
+def z_score_normalize(series):
     """
-    Normalize a signal to zero mean and unit variance.
+    Centers the series at zero and scales it so the standard deviation is 1.
+    Very useful for comparing two different stocks that trade at different prices.
     """
-    return (signal - np.mean(signal)) / np.std(signal)
+    return (series - np.mean(series)) / np.std(series)
 
-def apply_windowing(signal, window_type='hann'):
+def apply_taper(series, window='hann'):
     """
-    Apply a window function to a signal.
+    Applies a taper (window) to the edges of the signal to prevent leakage 
+    when we perform spectral transforms.
     """
     from scipy.signal import get_window
-    window = get_window(window_type, len(signal))
-    return signal * window
+    taper_weights = get_window(window, len(series))
+    return series * taper_weights

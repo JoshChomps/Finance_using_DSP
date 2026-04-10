@@ -1,4 +1,7 @@
 import streamlit as st
+from dotenv import load_dotenv
+
+load_dotenv()
 
 st.set_page_config(
     page_title="FinSignal Suite",
@@ -6,26 +9,28 @@ st.set_page_config(
     layout="wide",
 )
 
+with open("style.css") as f:
+    st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
+
 st.title("🛡️ FinSignal Suite")
-st.subheader("Multi-Resolution Financial Signal Processing Engine")
+st.subheader("Signal Processing for the Financial Markets")
 
 st.markdown("""
 ### Welcome to the Future of Market Risk Analysis
-Traditional correlation metrics treat all timescales identically, creating dangerous blind spots. 
-**FinSignal Suite** uses advanced Digital Signal Processing (DSP) to decompose market volatility 
-into distinct frequency bands, revealing hidden structures that standard metrics miss.
+Most people look at correlation as a single number, but that creates dangerous blind spots. 
+**FinSignal Suite** uses Digital Signal Processing (DSP) to break market volatility 
+into distinct cycles, revealing the hidden structures that standard metrics miss.
 
 #### Core Modules:
 1. **🔍 Decomposition Explorer**: Break down price action into Macro, Weekly, and Noise components using Wavelets.
-2. **🤝 Cross-Asset Resonance**: Identify frequency-localized coupling between assets—exactly when and where decoupling fails.
-3. **➡️ Directional Causality**: Reveal which asset leads and which follows using Spectral Granger Causality.
+2. **🤝 Cross-Asset Resonance**: Identify exactly when and where two assets are moving in sync at specific frequencies.
+3. **➡️ Directional Causality**: Find out which asset is leading and which is following using Spectral Granger analysis.
 
 ---
 ### Getting Started
-Use the sidebar to navigate between the different analysis modules. Select tickers, adjust wavelet parameters, 
-and explore the hidden frequency structure of the markets.
+Use the sidebar to jump between modules. Pick your symbols, adjust the analysis depth, and start exploring the hidden underlying cycles of the market.
 
-*Powered by PyWavelets, ssqueezepy, and Geweke Spectral Analysis.*
+*Built on PyWavelets, ssqueezepy, and Geweke Spectral Analysis.*
 """)
 
 # Sidebar info

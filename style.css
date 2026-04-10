@@ -1,0 +1,57 @@
+/* FinSignal Suite Custom Styling */
+
+/* Main Background and Text */
+.stApp {
+    background-color: #0d1117;
+    color: #e6edf3;
+    font-family: 'Inter', sans-serif;
+}
+
+/* Glassmorphism for Sidebar */
+[data-testid="stSidebar"] {
+    background: rgba(22, 27, 34, 0.7) !important;
+    backdrop-filter: blur(10px) !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Typography Enhancements */
+h1, h2, h3 {
+    font-family: 'Outfit', sans-serif !important;
+    color: #ffffff;
+    font-weight: 600;
+}
+
+/* Customizing Buttons */
+.stButton>button {
+    background: linear-gradient(135deg, #0ce698, #07b578);
+    color: #000;
+    font-weight: bold;
+    border: none;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 6px rgba(0, 255, 157, 0.2);
+}
+
+.stButton>button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 255, 157, 0.3);
+}
+
+/* Metrics and Cards */
+[data-testid="stMetricValue"] {
+    font-size: 2rem !important;
+    color: #0ce698;
+}
+
+/* Metric container shadow */
+[data-testid="stMetric"] {
+    background: rgba(255,255,255,0.03);
+    padding: 1rem;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.05);
+}
+
+/* General transitions */
+* {
+    transition: background-color 0.2s, color 0.2s;
+}

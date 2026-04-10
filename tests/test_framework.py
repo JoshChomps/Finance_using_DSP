@@ -1,47 +1,46 @@
 import pytest
 import numpy as np
 import pandas as pd
-from engine.decompose import decompose_signal_mra
-from engine.scalogram import compute_cwt
-from engine.coherence import compute_wavelet_coherence
-from engine.granger import compute_spectral_granger
+from engine.decompose import slice_signal
+from engine.scalogram import run_cwt_analysis
+from engine.coherence import calculate_coherence
+from engine.granger import analyze_causal_flow
 
 def test_decomposition():
-    # Signal length must be divisible by 2**level for swt-based mra
-    level = 3
-    length = 128 # 2**7
+    # Signal length logic: our slice_signal pads automatically now
+    depth = 3
+    length = 125 
     signal = np.sin(np.linspace(0, 10, length)) + np.random.normal(0, 0.1, length)
-    bands = decompose_signal_mra(signal, level=level)
-    assert len(bands) == level + 1
+    bands = slice_signal(signal, depth=depth)
+    assert len(bands) == depth + 1
     assert all(len(b) == length for b in bands)
 
 def test_scalogram():
     signal = np.sin(np.linspace(0, 10, 128)) + np.random.normal(0, 0.1, 128)
-    Wx, scales = compute_cwt(signal)
-    assert Wx.shape[1] == 128
-    assert len(scales) == Wx.shape[0]
+    map_complex, scales = run_cwt_analysis(signal)
+    assert map_complex.shape[1] == 128
+    assert len(scales) == map_complex.shape[0]
 
 def test_coherence():
-    # pycwt needs stochastic component for AR(1) estimation
     np.random.seed(42)
     t = np.linspace(0, 10, 256)
     y1 = np.sin(t) + np.random.normal(0, 0.2, 256)
     y2 = np.sin(t + 0.5) + np.random.normal(0, 0.2, 256)
-    wct, phase, coi, freqs, scales = compute_wavelet_coherence(y1, y2)
-    assert wct.shape[1] == 256
-    assert np.all(wct >= 0)
+    resonance_map, phase, coi, freqs, sig = calculate_coherence(y1, y2)
+    assert resonance_map.shape[1] == 256
+    assert np.all(resonance_map >= 0)
 
 def test_granger():
-    # Simple leader-follower relation
+    # Simple leader-follower relation simulation
     t = np.linspace(0, 50, 500)
     y = np.sin(t)
     x = np.sin(t - 1) + np.random.normal(0, 0.1, 500) # y leads x
     data = np.vstack([x, y]).T
-    freqs, g_yx, g_xy = compute_spectral_granger(data, maxlag=5)
+    freq_bins, flow_yx, flow_xy = analyze_causal_flow(data, maxlag=5)
+    
     # Success if it returns arrays of correct size
-    assert len(freqs) == len(g_yx) == len(g_xy)
-    # Check if mean causal strength y->x is positive and likely > x->y
-    assert np.mean(g_yx) >= 0
+    assert len(freq_bins) == len(flow_yx) == len(flow_xy)
+    assert np.mean(flow_yx) >= 0
 
 if __name__ == "__main__":
     pytest.main([__file__])

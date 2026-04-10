@@ -3,95 +3,97 @@ import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
 from engine.data import get_data
-from engine.utils import compute_log_returns, normalize_signal
-from engine.coherence import compute_wavelet_coherence
+from engine.utils import calculate_returns, z_score_normalize
+from engine.coherence import calculate_coherence
+from engine.ui import inject_custom_css
 
 st.set_page_config(page_title="Cross-Asset Resonance | FinSignal Suite", layout="wide")
+inject_custom_css(st)
 
 st.title("🤝 Cross-Asset Resonance")
 
 # Sidebar Controls
-st.sidebar.header("Settings")
-t1 = st.sidebar.selectbox("First Ticker", ["SPY", "QQQ", "GLD", "TLT", "AAPL", "MSFT"], index=0)
-t2 = st.sidebar.selectbox("Second Ticker", ["SPY", "QQQ", "GLD", "TLT", "AAPL", "MSFT"], index=2) # Default GLD
+st.sidebar.header("Comparison Settings")
+first_sym = st.sidebar.selectbox("First Asset", ["SPY", "QQQ", "GLD", "TLT", "AAPL", "MSFT"], index=0)
+second_sym = st.sidebar.selectbox("Second Asset", ["SPY", "QQQ", "GLD", "TLT", "AAPL", "MSFT"], index=2) 
 
-if t1 == t2:
-    st.warning("Please select two different tickers for coherence analysis.")
+if first_sym == second_sym:
+    st.warning("Please select two different assets to compare.")
 else:
     # Load Data
-    d1 = get_data(t1)
-    d2 = get_data(t2)
+    data1 = get_data(first_sym)
+    data2 = get_data(second_sym)
     
-    if d1 is not None and d2 is not None:
-        # Align data (truncate to shortest)
-        min_len = min(len(d1), len(d2))
-        r1 = compute_log_returns(d1).tail(min_len)
-        r2 = compute_log_returns(d2).tail(min_len)
+    if data1 is not None and data2 is not None:
+        # Align data lengths
+        min_size = min(len(data1), len(data2))
+        returns1 = calculate_returns(data1).tail(min_size)
+        returns2 = calculate_returns(data2).tail(min_size)
         
-        # Normalize
-        r1_n = normalize_signal(r1)
-        r2_n = normalize_signal(r2)
+        # Normalize for comparison
+        norm1 = z_score_normalize(returns1)
+        norm2 = z_score_normalize(returns2)
         
-        st.subheader(f"Analyzing {t1} vs {t2}")
+        st.subheader(f"Analyzing {first_sym} vs {second_sym}")
         
-        with st.spinner("Computing Wavelet Coherence (this is intensive)..."):
-            # Limit data to last 1000 points to keep it responsive in the dashboard
-            max_points = 750
-            y1 = r1_n.tail(max_points).values
-            y2 = r2_n.tail(max_points).values
+        with st.spinner("Calculating resonance..."):
+            # Limit to 750 points for smooth dashboard interaction
+            sample_size = 750
+            series1 = norm1.tail(sample_size).values
+            series2 = norm2.tail(sample_size).values
             
-            wct, phase, coi, freqs, sig = compute_wavelet_coherence(y1, y2)
+            resonance_map, phase, coi, freqs, sig = calculate_coherence(series1, series2)
             
         # 1. Coherence Heatmap
-        fig_wct = go.Figure(data=go.Heatmap(
-            z=wct,
-            x=np.arange(len(y1)),
+        fig_heat = go.Figure(data=go.Heatmap(
+            z=resonance_map,
+            x=np.arange(len(series1)),
             y=freqs,
             colorscale='Hot',
             showscale=True,
-            colorbar=dict(title="Coherence")
+            colorbar=dict(title="Resonance")
         ))
         
-        # Overlay Cone of Influence
-        # coi is the edge of the reliable region
-        fig_wct.add_trace(go.Scatter(
-            x=np.arange(len(y1)),
-            y=1.0/coi, # coi usually in period, converting to freq if needed or just showing period
-            name="Cone of Influence",
+        # Dash line for Cone of Influence
+        fig_heat.add_trace(go.Scatter(
+            x=np.arange(len(series1)),
+            y=1.0/coi, 
+            name="Boundary Artifacts",
             line=dict(color='white', dash='dash'),
             showlegend=False
         ))
 
-        fig_wct.update_layout(
-            title=f"Wavelet Coherence: {t1} vs {t2}",
-            xaxis_title="Time (Days)",
-            yaxis_title="Frequency",
+        fig_heat.update_layout(
+            title=f"Wavelet Coherence: {first_sym} vs {second_sym}",
+            xaxis_title="Time index (Days)",
+            yaxis_title="Relative Frequency",
             height=600
         )
-        st.plotly_chart(fig_wct, use_container_width=True)
+        st.plotly_chart(fig_heat, use_container_width=True)
         
-        # 2. Insights
+        # 2. Insights & Summary
         st.divider()
         col1, col2 = st.columns(2)
         
         with col1:
-            avg_coherence = np.mean(wct, axis=1)
-            fig_avg = go.Figure()
-            fig_avg.add_trace(go.Bar(x=freqs, y=avg_coherence))
-            fig_avg.update_layout(title="Average Coherence per Frequency", xaxis_title="Frequency", yaxis_title="Mean WCT")
-            st.plotly_chart(fig_avg, use_container_width=True)
+            mean_by_freq = np.mean(resonance_map, axis=1)
+            fig_bar = go.Figure()
+            fig_bar.add_trace(go.Bar(x=freqs, y=mean_by_freq))
+            fig_bar.update_layout(title="Average Strength Per Cycle", xaxis_title="Frequency", yaxis_title="Strength")
+            st.plotly_chart(fig_bar, use_container_width=True)
             
         with col2:
             st.markdown(f"""
-            #### How to interpret this chart:
-            - **Bright Red/Yellow Areas**: High resonance. The two assets are tightly coupled at these frequencies and times.
-            - **Dark Areas**: Low resonance. The assets are moving independently.
-            - **V-Shape (Cone of Influence)**: Data outside this dashed line may be affected by edge artifacts.
+            #### How to read this chart
+            - **Glowing Areas**: Strong resonance. These assets are moving together at these specific cycles.
+            - **Dark Areas**: No connection. The assets are decoupling.
+            - **Dashed V-Shape**: This marks the limit where edge effects might skew the math.
             
-            **Current Context:**
-            - Average Coherence: `{np.mean(wct):.4f}`
-            - Peak Coherence: `{np.max(wct):.4f}`
+            **Quick Stats:**
+            - Average Resonance: `{np.mean(resonance_map):.4f}`
+            - Peak Resilience: `{np.max(resonance_map):.4f}`
             """)
             
     else:
-        st.error("Error loading data for one or both tickers.")
+        st.error("We had trouble loading data for those specific symbols.")
+

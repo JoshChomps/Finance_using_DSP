@@ -3,44 +3,31 @@ import pandas as pd
 import pycwt as wavelet
 from pycwt.helpers import find
 
-def compute_wavelet_coherence(y1, y2, dt=1.0, dj=1/12):
+def calculate_coherence(first_series, second_series, time_step=1.0, scale_resolution=1/12):
     """
-    Compute wavelet coherence between two signals.
-    Returns (WCT, phase, units, period, scale, coi)
+    Measures how much two signals "resonate" with each other at different 
+    frequencies and points in time.
     """
-    # y1, y2 should be normalized signals
-    # pycwt implementation
+    # use the Morlet wavelet as the "mother" wave
+    standard_wave = wavelet.Morlet()
     
-    # Cross Wavelet Transform
-    # mother = Morlet() is standard for coherence
-    mother = wavelet.Morlet()
+    # Calculate Cross Wavelet Transform (measuring shared power)
+    cross_power, cone_of_influence, frequencies, significance = wavelet.xwt(
+        first_series, second_series, time_step, dj=scale_resolution, wavelet=standard_wave
+    )
     
-    # Cross Wavelet Transform
-    # pycwt.xwt(y1, y2, dt, dj, s0, J, wavelet)
-    # returns xwt, coi, freqs, significance
-    x_wt, coi, freqs, signi = wavelet.xwt(y1, y2, dt, dj=dj, wavelet=mother)
+    # Calculate the actual coherence map and the phase relationship (leading/lagging)
+    coherence_map, phase_angle, coi, freqs, sig = wavelet.wct(
+        first_series, second_series, time_step, dj=scale_resolution, wavelet=standard_wave, sig=False
+    )
     
-    # Wavelet Coherence Transform
-    # wct(y1, y2, dt, dj, s0, J, sig, significance_level, wavelet, normalize)
-    # returns WCT, aWCT, coi, freqs, sig
-    wct, phase, coi, freqs, sig = wavelet.wct(y1, y2, dt, dj=dj, wavelet=mother, sig=False)
-    
-    return wct, phase, coi, freqs, sig
+    return coherence_map, phase_angle, coi, freqs, sig
 
-def compute_significance(y1, y2, dt=1.0, dj=1/12):
+def check_coherence_significance(a, b, dt=1.0, dj=1/12):
     """
-    Compute wavelet coherence significance.
-    Note: This is computationally expensive as it uses MC simulations.
+    Checks if the observed resonance is statistically significant 
+    or just random noise.
     """
-    mother = wavelet.Morlet()
-    # Estimate the significance level
-    # We use a lower number of iterations for hackathon speed if needed, 
-    # but pycwt has good defaults.
-    sig = wavelet.wct_significance(y1, y2, dt, dj=dj, mother=mother)
-    return sig
+    wave = wavelet.Morlet()
+    return wavelet.wct_significance(a, b, dt, dj=dj, mother=wave)
 
-def get_coherence_matrix(wct_coeffs):
-    """
-    Return the magnitude squared coherence (the actual WTC measure).
-    """
-    return wct_coeffs

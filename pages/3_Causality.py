@@ -3,87 +3,88 @@ import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
 from engine.data import get_data
-from engine.utils import compute_log_returns, normalize_signal
-from engine.granger import compute_spectral_granger, compute_time_domain_granger
+from engine.utils import calculate_returns, z_score_normalize
+from engine.granger import analyze_causal_flow, check_standard_causality
+from engine.ui import inject_custom_css
 
 st.set_page_config(page_title="Directional Causality | FinSignal Suite", layout="wide")
+inject_custom_css(st)
 
 st.title("➡️ Directional Causality")
 
 # Sidebar Controls
-st.sidebar.header("Settings")
-t1 = st.sidebar.selectbox("Leading Asset (Candidate)", ["SPY", "QQQ", "GLD", "TLT", "AAPL", "MSFT"], index=2) # Default GLD leads
-t2 = st.sidebar.selectbox("Following Asset (Target)", ["SPY", "QQQ", "GLD", "TLT", "AAPL", "MSFT"], index=0) # Default SPY
+st.sidebar.header("Asset Selection")
+candidate = st.sidebar.selectbox("Potential Leader", ["SPY", "QQQ", "GLD", "TLT", "AAPL", "MSFT"], index=2) 
+target_asset = st.sidebar.selectbox("Follower (Target)", ["SPY", "QQQ", "GLD", "TLT", "AAPL", "MSFT"], index=0) 
 
-maxlag = st.sidebar.slider("VAR Max Lag", 1, 20, 5)
+max_lags = st.sidebar.slider("Analysis Lags", 1, 20, 5)
 
-if t1 == t2:
-    st.warning("Please select two different tickers.")
+if candidate == target_asset:
+    st.warning("Please choose two different assets.")
 else:
     # Load Data
-    d1 = get_data(t1)
-    d2 = get_data(t2)
+    data1 = get_data(candidate)
+    data2 = get_data(target_asset)
     
-    if d1 is not None and d2 is not None:
-        # Align data
-        min_len = min(len(d1), len(d2))
-        r1 = compute_log_returns(d1).tail(min_len)
-        r2 = compute_log_returns(d2).tail(min_len)
+    if data1 is not None and data2 is not None:
+        # Align data lengths
+        min_size = min(len(data1), len(data2))
+        returns1 = calculate_returns(data1).tail(min_size)
+        returns2 = calculate_returns(data2).tail(min_size)
         
-        # Combine into a single dataframe for VAR
-        # column 0 is target (x), column 1 is candidate leader (y)
-        # We want to see if y leads x
-        df_var = pd.concat([r1, r2], axis=1).dropna()
-        df_var.columns = [t1, t2]
+        # Merge for leadership check
+        combined = pd.concat([returns1, returns2], axis=1).dropna()
+        combined.columns = [candidate, target_asset]
         
-        st.subheader(f"Causal Path: {t1} ↔ {t2}")
+        st.subheader(f"Causal Path: {candidate} is leading {target_asset}?")
         
-        with st.spinner("Computing Spectral Granger Causality..."):
-            # Using only last 1000 points for stability
-            data_arr = df_var.tail(1000).values
-            freqs, g_yx, g_xy = compute_spectral_granger(data_arr, maxlag=maxlag)
+        with st.spinner("Analyzing causal flow..."):
+            # Use last 1000 points for stable stats
+            input_data = combined.tail(1000).values
+            freq_bins, push_fwd, push_bwd = analyze_causal_flow(input_data, maxlag=max_lags)
             
         # 1. Spectral Granger Plot
         fig_gc = go.Figure()
-        fig_gc.add_trace(go.Scatter(x=freqs, y=g_yx, name=f"{t1} -> {t2}", line=dict(color='orange', width=3)))
-        fig_gc.add_trace(go.Scatter(x=freqs, y=g_xy, name=f"{t2} -> {t1}", line=dict(color='blue', width=3)))
+        fig_gc.add_trace(go.Scatter(x=freq_bins, y=push_fwd, name=f"{candidate} -> {target_asset}", line=dict(color='orange', width=3)))
+        fig_gc.add_trace(go.Scatter(x=freq_bins, y=push_bwd, name=f"{target_asset} -> {candidate}", line=dict(color='blue', width=3)))
         
         fig_gc.update_layout(
-            title="Spectral Granger Causality (Geweke Measure)",
-            xaxis_title="Normalized Frequency (cycles/day)",
-            yaxis_title="Causal Strength",
+            title="Frequency-based Leadership Strength",
+            xaxis_title="Relative Cycle Frequency",
+            yaxis_title="Influence Strength",
             height=500
         )
         st.plotly_chart(fig_gc, use_container_width=True)
         
-        # 2. Time-Domain Comparison
+        # 2. Time-Domain Table
         st.divider()
         col1, col2 = st.columns(2)
         
         with col1:
-            st.subheader("Time-Domain Analysis")
-            with st.spinner("Computing Time-Domain Granger..."):
-                # Check if T1 leads T2
-                p_vals = compute_time_domain_granger(df_var[[t2, t1]].tail(1000).values, maxlag=maxlag)
-                p_df = pd.DataFrame({"Lag": list(p_vals.keys()), "p-value": list(p_vals.values())})
+            st.subheader("Standard Prediction Test")
+            with st.spinner("Checking p-values..."):
+                # Check if Candidate leads Target
+                p_values = check_standard_causality(combined[[target_asset, candidate]].tail(1000).values, lags=max_lags)
+                p_stats = pd.DataFrame({"Lag": list(p_values.keys()), "p-value": list(p_values.values())})
                 
-                def highlight_sig(val):
-                    color = 'green' if val < 0.05 else 'white'
+                def highlight_significant(val):
+                    color = 'green' if val < 0.05 else 'None'
                     return f'background-color: {color}'
                 
-                st.table(p_df.style.applymap(highlight_sig, subset=['p-value']))
+                st.table(p_stats.style.applymap(highlight_significant, subset=['p-value']))
                 
         with col2:
-            st.subheader("Interpretation")
+            st.subheader("What this means")
             st.markdown(f"""
-            - **Causal Strength**: Higher values indicate stronger leadership at that specific frequency.
-            - **Frequency Scaling**:
-                - High frequency (>0.3) = Intraday/Noise coupling.
-                - Low frequency (<0.1) = Macro/Structural leadership.
+            - **Influence Strength**: Peaks in the graph show the cycles where leadership is strongest.
+            - **Frequency Spectrum**:
+                - High frequency (>0.3): Rapid noise or sentiment leadership.
+                - Low frequency (<0.1): Long-term structural or macro leadership.
             
-            **Current Context:**
-            At the `{freqs[np.argmax(g_yx)]:.3f}` frequency, **{t1}** has its strongest causal influence on **{t2}**.
+            **Observation:**
+            The strongest leadership from **{candidate}** to **{target_asset}** occurs at the `{freq_bins[np.argmax(push_fwd)]:.3f}` frequency.
             """)
             
     else:
-        st.error("Error loading data.")
+        st.error("There was an issue loading the asset data.")
+
