@@ -25,21 +25,25 @@ if data is not None:
     returns = calculate_returns(data)
     norm_data = z_score_normalize(returns)
     
-    col1, col2 = st.columns([1, 1])
+    # Plot Cumulative Returns (Growth) instead of noisy daily returns
+    cumulative_growth = (1 + returns).cumprod() - 1
+    dates = returns.index
     
-    with col1:
-        dates = returns.index
-        st.subheader(f"Price Momentum: {symbol}")
-        fig_raw = go.Figure()
-        fig_raw.add_trace(go.Scatter(x=dates, y=returns, name="Daily Returns", line=dict(color='rgba(100, 149, 237, 0.8)')))
-        fig_raw.update_layout(
-            height=300, 
-            margin=dict(l=0, r=0, t=20, b=0),
-            paper_bgcolor="rgba(0,0,0,0)",
-            plot_bgcolor="rgba(0,0,0,0)",
-            template="plotly_dark"
-        )
-        st.plotly_chart(fig_raw, use_container_width=True)
+    st.subheader(f"Price Momentum: {symbol} (Cumulative Growth)")
+    fig_raw = go.Figure()
+    fig_raw.add_trace(go.Scatter(
+        x=dates, y=cumulative_growth, name="Growth", 
+        line=dict(color='rgba(100, 149, 237, 0.8)'), fill='tozeroy'
+    ))
+    fig_raw.update_layout(
+        height=400, 
+        margin=dict(l=0, r=0, t=30, b=0),
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        template="plotly_dark",
+        yaxis_tickformat='.1%'
+    )
+    st.plotly_chart(fig_raw, use_container_width=True)
 
     # 1. Multi-Resolution Analysis
     st.divider()
@@ -47,9 +51,9 @@ if data is not None:
     with st.expander("📖 What does this mean?", expanded=True):
         st.markdown(f"""
         **MRA (Multi-Resolution Analysis)** literally separates the fast 'noise' of the market from the deep, slow-moving 'structural' trends. 
-        - **D1 / D2 (Top Lines)**: Fast-paced, high-frequency noise. Often mean-reverting.
-        - **D3 / D4 (Middle Lines)**: Multi-day to weekly momentum shifts. Good for swing trading.
-        - **A (Bottom Line)**: The smoothed, underlying macroeconomic trend. If `A` is pointing up, {symbol} is in a structural bull market regardless of daily red candles.
+        - **Top Lines (Fast Details)**: Fast-paced, high-frequency noise. Often mean-reverting.
+        - **Middle Lines (Swings)**: Multi-day to weekly momentum shifts. Good for swing trading.
+        - **Bottom Line (Macro Trend)**: The smoothed, underlying macroeconomic trend. If the Macro trend is pointing up, {symbol} is in a structural bull market regardless of daily red candles.
         """)
     
     with st.spinner("Breaking down the signal..."):
@@ -83,10 +87,10 @@ if data is not None:
         - **Bright Yellow/Red Spots**: Intense bursts of market energy. A wide vertical burst means volatility is shocking the system across *all* timeframes (classic crash signature).
         """)
     
-    method = st.radio("Transform Method", ["Adaptive Wavelet", "Synchrosqueezed (Sharper)"])
+    method = st.radio("Transform Method", ["Standard Volatility Map (CWT)", "High-Definition Volatility Map (Synchrosqueeze)"])
     
     with st.spinner("Generating heatmap..."):
-        if method == "Adaptive Wavelet":
+        if method == "Standard Volatility Map (CWT)":
             map_data, scales = run_cwt_analysis(norm_data)
             intensity = get_magnitude(map_data)
             y_label = "Cycle Scale"

@@ -36,12 +36,29 @@ def slice_signal(signal, wavelet='db4', depth=5):
 
 def create_labels(depth):
     """
-    Generates names for the bands so we know which is which.
+    Generates human-readable names for the decomposed cyclical bands, 
+    ordered from slowest (Approximation) to fastest (Micro-Noise).
     """
-    names = ["Long-term Trend"]
+    labels = ["Underlying Structural Trend"]
+    
+    # Detail bands go from depth (slowest) down to 1 (fastest)
     for i in range(depth, 0, -1):
-        names.append(f"Cycle Level {i}")
-    return names
+        if i == 5:
+            labels.append("Quarterly Trend (1-3 Months)")
+        elif i == 4:
+            labels.append("Monthly Momentum (2-4 Weeks)")
+        elif i == 3:
+            labels.append("Weekly Cycles (1-2 Weeks)")
+        elif i == 2:
+            labels.append("Fast Swings (2-4 Days)")
+        elif i == 1:
+            labels.append("Micro-Noise (1-2 Days)")
+        else:
+            labels.append(f"Deep Macro Cycle (Level {i})")
+        
+    return labels
+
+
 
 def map_to_dataframe(bands, names):
     """
