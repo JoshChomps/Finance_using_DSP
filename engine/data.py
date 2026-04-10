@@ -3,11 +3,14 @@ import pandas as pd
 import yfinance as yf
 from datetime import datetime, timedelta
 
+from functools import lru_cache
+
 # Where we store our local market data downloads
 # Allow override via environment variable for production/Docker environments
 DEFAULT_CACHE = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data', 'cache')
 CACHE_FOLDER = os.getenv('FIN_DATA_CACHE', DEFAULT_CACHE)
 
+@lru_cache(maxsize=32)
 def get_data(symbol, period='5y', interval='1d', use_cache=True):
     """
     Grabs historical price data. We check the local cache first to save time 

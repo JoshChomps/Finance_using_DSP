@@ -22,7 +22,7 @@ def test_decompose_endpoint():
     results = response.json()
     assert "symbol" in results
     assert "components" in results
-    assert "Long-term Trend" in results["components"]
+    assert "Underlying Structural Trend" in results["components"]
 
 def test_coherence_endpoint():
     if not _data_available("GLD", "SPY"):

@@ -74,7 +74,7 @@ else:
             plot_bgcolor="rgba(0,0,0,0)",
             template="plotly_dark"
         )
-        st.plotly_chart(fig_heat, use_container_width=True)
+        st.plotly_chart(fig_heat, width='stretch')
         
         # 2. Insights & Summary
         st.divider()
@@ -98,7 +98,7 @@ else:
                 plot_bgcolor="rgba(0,0,0,0)",
                 template="plotly_dark"
             )
-            st.plotly_chart(fig_bar, use_container_width=True)
+            st.plotly_chart(fig_bar, width='stretch')
             
         with col2:
             st.subheader("Qualitative Summary")

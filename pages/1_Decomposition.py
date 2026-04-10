@@ -86,7 +86,7 @@ if data is not None:
         template="plotly_dark",
         yaxis_tickformat='.1%'
     )
-    st.plotly_chart(fig_raw, use_container_width=True)
+    st.plotly_chart(fig_raw, width='stretch')
 
     # 1. Multi-Resolution Analysis
     st.subheader("Actionable Intelligence Decoder")
@@ -130,7 +130,7 @@ if data is not None:
         plot_bgcolor="rgba(0,0,0,0)",
         template="plotly_dark"
     )
-    st.plotly_chart(fig_dwt, use_container_width=True)
+    st.plotly_chart(fig_dwt, width='stretch')
 
     # 2. CWT Scalogram
     st.divider()
@@ -175,8 +175,7 @@ if data is not None:
         plot_bgcolor="rgba(0,0,0,0)",
         template="plotly_dark"
     )
-    st.plotly_chart(fig_heat, use_container_width=True)
+    st.plotly_chart(fig_heat, width='stretch')
     
 else:
     st.error("We couldn't pull the data for that symbol.")
-

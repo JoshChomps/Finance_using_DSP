@@ -118,7 +118,7 @@ if raw_data is not None:
         plot_bgcolor="rgba(0,0,0,0)",
         template="plotly_dark"
     )
-    st.plotly_chart(fig_stft, use_container_width=True)
+    st.plotly_chart(fig_stft, width='stretch')
 
     # Price line for context
     fig_price = go.Figure()
@@ -133,7 +133,7 @@ if raw_data is not None:
         plot_bgcolor="rgba(0,0,0,0)",
         template="plotly_dark"
     )
-    st.plotly_chart(fig_price, use_container_width=True)
+    st.plotly_chart(fig_price, width='stretch')
 
     st.divider()
     with st.expander("📖 Interpreting the Intraday Flow", expanded=True):

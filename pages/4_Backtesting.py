@@ -161,7 +161,7 @@ else:
             plot_bgcolor="rgba(0,0,0,0)",
             template="plotly_dark"
         )
-        st.plotly_chart(fig_curve, use_container_width=True)
+        st.plotly_chart(fig_curve, width='stretch')
 
         # ── Signal visualization ───────────────────────────────────────────────
         st.divider()
@@ -184,7 +184,7 @@ else:
             plot_bgcolor="rgba(0,0,0,0)",
             template="plotly_dark"
         )
-        st.plotly_chart(fig_sig, use_container_width=True)
+        st.plotly_chart(fig_sig, width='stretch')
 
         # Price vs MA overlay when trend filter is active
         if use_trend_filter:
@@ -207,7 +207,7 @@ else:
                 plot_bgcolor="rgba(0,0,0,0)",
                 template="plotly_dark"
             )
-            st.plotly_chart(fig_trend, use_container_width=True)
+            st.plotly_chart(fig_trend, width='stretch')
 
         st.divider()
         with st.expander("📖 Interpreting the Backtest Results", expanded=True):

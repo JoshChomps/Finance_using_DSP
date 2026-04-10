@@ -66,7 +66,7 @@ else:
             plot_bgcolor="rgba(0,0,0,0)",
             template="plotly_dark"
         )
-        st.plotly_chart(fig_gc, use_container_width=True)
+        st.plotly_chart(fig_gc, width='stretch')
         
         # 2. Time-Domain Table
         st.divider()
