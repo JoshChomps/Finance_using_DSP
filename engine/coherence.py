@@ -89,7 +89,7 @@ def compute_lead_lag_summary(phase_angle, freqs, coherence_map, coi,
             "period_days": round(period, 1),
             "freq": round(freq, 4),
             "lead_days": round(lead_days, 1),
-            "first_leads": lead_days > 0,
+            "first_leads": bool(lead_days > 0),
             "avg_coherence": round(float(np.mean(coh_inside)), 3),
             "avg_phase_deg": round(float(np.degrees(avg_phase)), 1),
         })
