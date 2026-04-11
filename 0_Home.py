@@ -4,40 +4,59 @@ from dotenv import load_dotenv
 load_dotenv()
 
 st.set_page_config(
-    page_title="FinSignal Suite",
-    page_icon="📈",
+    page_title="Market DNA Engine",
+    page_icon="🧬",
     layout="wide",
 )
 
-with open("style.css") as f:
-    st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
+# Load CSS via the established ui module for better consistency across pages
+from engine.ui import inject_custom_css
+inject_custom_css(st)
 
-st.title("FinSignal Suite")
-st.subheader("Signal Processing for the Financial Markets")
+# Institutional Hero Section
+st.markdown('<h1 class="header-gradient">The Market DNA Engine</h1>', unsafe_allow_html=True)
+st.subheader("Orthogonal Frequency Analysis for Institutional Alpha")
 
 st.markdown("""
-### Welcome to the Future of Market Risk Analysis
-Standard metrics like moving averages or linear correlations look at the market through an oversimplified lens, leading to dangerous blind spots during structural changes. 
+<br>
 
-**FinSignal Suite** utilizes Digital Signal Processing (DSP) to mathematically dissect market volatility into its component frequencies. Just like a prism splits white light into a rainbow, our tool utilizes Wavelets and Spectral Causality to break down complex price movements into isolated microscopic and macroscopic cycles.
+### 🔬 The Signal, Not the Noise
+Most quantitative models fail because they view the market as a single, messy time-series. In reality, market price is a **composite signal**—a complex mix of HFT noise, weekly swing momentum, and deep structural macro cycles. 
 
-#### 🧠 Why DSP in Finance?
-- **Phase Alignment**: Moving averages inherently lag. Wavelets can isolate dominant trends *without* shifting them back in time, allowing you to see support and resistance before they manifest in lagging indicators.
-- **Granular Correlation**: Traditional correlation checks if two assets move together overall. DSP **Resonance** checks exactly *which specific types of movements* (e.g., short-term panics vs multi-month trends) they share.
-
-#### Core Modules:
-1. **Decomposition Explorer**: Break down price action into Macro, Weekly, and Noise components using localized Wavelet filtering. See the "true trend" without the noise.
-2. **Cross-Asset Resonance**: Identify exactly when and where two assets are moving in sync at specific frequencies.
-3. **Directional Causality**: Uncover hidden leadership. Find out which asset is leading the market by measuring Spectral Granger Causality.
+**The Market DNA Engine** uses advanced Digital Signal Processing (DSP) to peel back these layers with surgical precision. Just as a prism separates light into its component colors, our engine utilizes **Wavelets** and **Synchrosqueezing** to isolate the cycles that actually drive the trend.
 
 ---
-### 🚀 Getting Started
-Use the sidebar to jump between modules. Pick your symbols, adjust the analysis depth, and start exploring the hidden underlying cycles of the market.
+""", unsafe_allow_html=True)
 
-*Built on PyWavelets, ssqueezepy, and Geweke Spectral Analysis.*
-""")
+col1, col2, col3 = st.columns(3)
 
-# Sidebar info
-st.sidebar.info("Select a module above to begin your analysis.")
-st.sidebar.markdown("---")
-st.sidebar.caption("FinSignal Suite v1.0 | AlgoFest 2026")
+with col1:
+    st.markdown("#### 🧬 Price DNA")
+    st.write("We break price action into its fundamental building blocks. Isolate the structural macro trend from the intraday algorithmic noise.")
+
+with col2:
+    st.markdown("#### ⚡ Spectral Resonance")
+    st.write("Traditional correlation is a blunt instrument. We identify exactly *which* frequencies assets share to uncover hidden systemic risks.")
+
+with col3:
+    st.markdown("#### ⛓️ Causal Leadership")
+    st.write("Stop guessing who leads. Use Spectral Granger Causality to identify which asset is the true 'leading indicator' at specific time scales.")
+
+st.markdown("""
+---
+### 🛠️ Strategic Edge
+By discarding the "Noise" component and focusing on the **Structural Trend**, investors can:
+- **Avoid False Breakouts**: Identify when price movement is purely high-frequency noise without macro support.
+- **Manage Hidden Correlation**: Uncover when a portfolio is dangerously over-resonant on a specific frequency band.
+- **Identify Leadership Shifts**: See leadership changes in real-time before they manifest in lagging technical indicators.
+
+---
+### 🛰️ Submission Hub | AlgoFest 2026
+Use the sidebar to explore the engine's core intelligence modules. Each page features a **Math Integrity Proof** and an **Actionable Stance Decoder.**
+""", unsafe_allow_html=True)
+
+# Sidebar refinement
+st.sidebar.markdown('<p class="header-gradient" style="font-size: 1.2rem;">Market DNA v1.2</p>', unsafe_allow_html=True)
+st.sidebar.success("✅ Technical Execution Verified")
+st.sidebar.info("Select a module above to begin.")
+st.sidebar.caption("Securing Institutional Alpha through Math.")

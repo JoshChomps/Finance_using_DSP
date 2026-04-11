@@ -7,7 +7,7 @@ from engine.utils import calculate_returns, z_score_normalize
 from engine.coherence import calculate_coherence
 from engine.ui import inject_custom_css
 
-st.set_page_config(page_title="Cross-Asset Resonance | FinSignal Suite", layout="wide")
+st.set_page_config(page_title="Cross-Asset Resonance | Market DNA", layout="wide")
 inject_custom_css(st)
 
 st.title("Cross-Asset Resonance")

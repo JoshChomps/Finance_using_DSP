@@ -12,7 +12,7 @@ from engine.coherence import calculate_coherence
 from engine.granger import analyze_causal_flow
 
 load_dotenv()
-app = FastAPI(title="FinSignal Suite API", description="Production DSP engine for technical analysis", version="1.0.0")
+app = FastAPI(title="Market DNA Engine API", description="Production DSP engine for technical analysis", version="1.0.0")
 
 class AssetRequest(BaseModel):
     symbol: str

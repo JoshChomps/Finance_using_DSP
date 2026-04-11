@@ -7,7 +7,7 @@ from datetime import datetime, time as dtime
 from engine.scalogram import track_frequency_flow
 from engine.ui import inject_custom_css
 
-st.set_page_config(page_title="Intraday Live Flow | FinSignal Suite", layout="wide")
+st.set_page_config(page_title="Intraday Live Flow | Market DNA", layout="wide")
 inject_custom_css(st)
 
 st.title("Intraday Live Flow")

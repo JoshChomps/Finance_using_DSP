@@ -13,7 +13,7 @@ from engine.backtest import (
 )
 from engine.ui import inject_custom_css
 
-st.set_page_config(page_title="Backtesting Simulator | FinSignal Suite", layout="wide")
+st.set_page_config(page_title="Backtesting Simulator | Market DNA", layout="wide")
 inject_custom_css(st)
 
 st.title("Backtesting Simulator")

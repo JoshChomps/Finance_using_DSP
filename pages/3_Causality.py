@@ -7,7 +7,7 @@ from engine.utils import calculate_returns, z_score_normalize
 from engine.granger import analyze_causal_flow, check_standard_causality
 from engine.ui import inject_custom_css
 
-st.set_page_config(page_title="Directional Causality | FinSignal Suite", layout="wide")
+st.set_page_config(page_title="Directional Causality | Market DNA", layout="wide")
 inject_custom_css(st)
 
 st.title("Directional Causality")

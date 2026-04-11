@@ -9,7 +9,7 @@ from engine.scalogram import run_cwt_analysis, run_synchrosqueezing, get_magnitu
 from engine.intelligence import analyze_stance, project_structural_trend
 from engine.ui import inject_custom_css
 
-st.set_page_config(page_title="Decomposition Explorer | FinSignal Suite", layout="wide")
+st.set_page_config(page_title="Decomposition Explorer | Market DNA", layout="wide")
 inject_custom_css(st)
 
 st.title("Decomposition Explorer")

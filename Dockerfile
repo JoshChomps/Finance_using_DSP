@@ -1,40 +1,39 @@
-# --- Build Stage ---
-FROM python:3.10-slim as builder
+# Market DNA Engine | Docker Deployment
+# Optimized for Algofest 2026 Submission
 
-WORKDIR /app
-
-# Upgrade pip and install build dependencies
-RUN pip install --no-cache-dir --upgrade pip
-
-# Copy only requirements to leverage Docker cache
-COPY requirements.txt .
-RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
-
-# --- Final Stage ---
 FROM python:3.10-slim
 
+# Prevent python from writing pyc files and buffering stdout/stderr
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
 WORKDIR /app
 
-# Install system dependencies (for scipy/numpy if needed)
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    libgomp1 \
+# Install system dependencies for numerical libraries
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    curl \
+    software-properties-common \
+    git \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy installed packages from builder
-COPY --from=builder /install /usr/local
+# Copy requirements and install python dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application code
+# Copy the entire project
 COPY . .
 
-# Ensure the data cache directory exists
-RUN mkdir -p /app/data/cache
+# Create cache directory for pre-downloaded data
+RUN mkdir -p data/cache
 
-# Environment variables
-ENV PYTHONUNBUFFERED=1
-ENV FIN_DATA_CACHE=/app/data/cache
+# Expose Streamlit (8501) and FastAPI (8000)
+EXPOSE 8501
+EXPOSE 8000
 
-# Labels
-LABEL org.opencontainers.image.title="FinSignal Suite"
-LABEL org.opencontainers.image.description="Multi-Resolution Financial Signal Processing Engine"
+# Healthcheck to verify the engine is alive
+HEALTHCHECK CMD curl --fail http://localhost:8501/_stcore/health
 
-# We don't specify CMD here; Docker Compose will handle the entrypoints
+# Entrypoint script to run both Streamlit and FastAPI if needed, 
+# although Streamlit is the primary UI for judging.
+CMD ["streamlit", "run", "0_Home.py", "--server.port=8501", "--server.address=0.0.0.0"]
