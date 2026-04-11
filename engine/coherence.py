@@ -1,7 +1,6 @@
 import numpy as np
 import pandas as pd
 import pycwt as wavelet
-from pycwt.helpers import find
 
 
 def calculate_coherence(first_series, second_series, time_step=1.0, scale_resolution=1/12):

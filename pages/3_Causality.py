@@ -72,8 +72,9 @@ else:
                 p_stats = pd.DataFrame({"Lag": list(p_values.keys()), "p-value": list(p_values.values())})
                 
                 def highlight_significant(val):
-                    color = 'rgba(46, 160, 67, 0.2)' if val < 0.05 else 'None'
-                    return f'background-color: {color}'
+                    if val < 0.05:
+                        return 'background-color: rgba(46, 160, 67, 0.2)'
+                    return ''
 
                 styler = p_stats.style
                 apply_fn = getattr(styler, 'map', None) or styler.applymap
@@ -95,8 +96,13 @@ else:
             As opposed to aggregate time-domain causality, the frequency-domain approach decomposes leadership into specific market rhythms. This allows for the identification of lead-lag relationships that may exist during long-term trends but vanish during short-term volatility.
             
             **Observation Summary:**
-            The statistical peak for causal flow from **{candidate}** to **{target_asset}** is observed at the `{freq_bins[np.argmax(flow_cand_to_target)]:.3f}` frequency bin. 
             """)
+            max_flow = float(np.max(flow_cand_to_target)) if len(flow_cand_to_target) > 0 else 0.0
+            if max_flow > 0.01:
+                peak_freq = freq_bins[np.argmax(flow_cand_to_target)]
+                st.markdown(f"The statistical peak for causal flow from **{candidate}** to **{target_asset}** is observed at the `{peak_freq:.3f}` frequency bin.")
+            else:
+                st.markdown(f"No significant frequency-domain leadership detected from **{candidate}** to **{target_asset}** in this sample.")
             
     else:
         st.error("Error in data retrieval for the selected assets.")

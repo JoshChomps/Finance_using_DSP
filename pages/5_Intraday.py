@@ -112,7 +112,7 @@ if raw_data is not None:
     # Price context
     fig_price = go.Figure()
     fig_price.add_trace(go.Scatter(
-        y=equity_path, mode="lines", name="Price",
+        x=raw_data.index, y=equity_path, mode="lines", name="Price",
         line=dict(color="#00ff9d"),
     ))
     fig_price.update_layout(

@@ -48,7 +48,8 @@ def test_coherence():
 def test_lead_lag_summary_types():
     """compute_lead_lag_summary should return a list of dicts with expected keys."""
     np.random.seed(1)
-    t = np.linspace(0, 40, 512)   # longer signal avoids pycwt AR(1) edge case
+    # 512 samples: pycwt needs enough data for its AR(1) bound estimate
+    t = np.linspace(0, 40, 512)
     y1 = np.sin(t) + np.random.normal(0, 0.1, 512)
     y2 = np.sin(t + 0.3) + np.random.normal(0, 0.1, 512)
     cmap, phase, coi, freqs, _ = calculate_coherence(y1, y2)
