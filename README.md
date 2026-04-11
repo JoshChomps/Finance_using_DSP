@@ -63,4 +63,4 @@ The engine is decoupled via **FastAPI**. Hook up your HFT bots to pull real-time
 
 ---
 ### 🛰️ AlgoFest 2026 Submission
-*Built by Josh Chomiak. Securing Alpha through Math Integrity.*
+*Built by Josh. Securing Alpha through Math Integrity.*
