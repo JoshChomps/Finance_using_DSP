@@ -22,8 +22,13 @@ def z_score_normalize(series):
     """
     Centers the series at zero and scales it so the standard deviation is 1.
     Very useful for comparing two different stocks that trade at different prices.
+    Returns a zero-centered series unchanged when std is effectively zero.
     """
-    return (series - np.mean(series)) / np.std(series)
+    mu = np.mean(series)
+    sigma = np.std(series)
+    if sigma < 1e-10:
+        return series - mu
+    return (series - mu) / sigma
 
 def apply_taper(series, window='hann'):
     """
