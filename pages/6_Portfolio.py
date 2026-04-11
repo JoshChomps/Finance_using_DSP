@@ -10,16 +10,21 @@ from engine.ui import inject_custom_css
 st.set_page_config(page_title="Portfolio Resonance Guardian | Market DNA", layout="wide")
 inject_custom_css(st)
 
-st.markdown('<h1 class="header-gradient">Resonance Guardian</h1>', unsafe_allow_html=True)
-st.markdown("### Detect hidden systemic risk in your diversification strategy.")
+st.title("Resonance Guardian")
+st.markdown("Identification of systemic risk through multi-asset spectral resonance analysis.")
 
 # Sidebar for Portfolio Input
 st.sidebar.header("Portfolio Construction")
-tickers_input = st.sidebar.text_input("Enter Ticker Symbols (comma separated)", value="SPY, QQQ, TSLA, AAPL, BTC-USD")
-tickers = [t.strip().upper() for t in tickers_input.split(",")]
+default_tickers = ["SPY", "QQQ", "GLD", "TLT", "AAPL", "MSFT", "NVDA", "BTC-USD", "TSLA"]
+tickers = st.sidebar.multiselect(
+    "Asset Selection",
+    options=default_tickers,
+    default=["SPY", "QQQ", "TSLA", "AAPL", "BTC-USD"],
+    help="Select the institutional assets to include in the resonance mapping."
+)
 
-st.sidebar.markdown("---")
-lookback = st.sidebar.slider("Analysis Window (Days)", 250, 1000, 500)
+st.sidebar.divider()
+lookback = st.sidebar.slider("Analysis Horizon (Days)", 250, 1000, 500)
 
 @st.cache_data(ttl=3600)
 def load_portfolio_data(ticker_list):
@@ -32,15 +37,15 @@ def load_portfolio_data(ticker_list):
     return portfolio
 
 if len(tickers) < 2:
-    st.warning("Please enter at least two tickers to analyze resonance.")
+    st.warning("Selection required: at least two assets for resonance mapping.")
 else:
-    with st.spinner("Analyzing portfolio resonance..."):
+    with st.spinner("Analyzing portfolio resonance:"):
         portfolio_data = load_portfolio_data(tickers)
         
     valid_tickers = list(portfolio_data.keys())
     
     if len(valid_tickers) < 2:
-        st.error("Not enough data found for the provided tickers.")
+        st.error("Data retrieval failed for the specified assets.")
     else:
         # Calculate the Average Coherence Matrix
         n = len(valid_tickers)
@@ -57,19 +62,17 @@ else:
                     matrix[i, j] = score
                     matrix[j, i] = score
         
-        # ── Top Intelligence Bar ───────────────────────────────────────────────
         avg_resonance = np.mean(matrix[np.triu_indices(n, k=1)])
         
         m1, m2, m3 = st.columns(3)
         with m1:
-            st.metric("Avg Portfolio Resonance", f"{avg_resonance:.4f}")
+            st.metric("Mean Portfolio Resonance", f"{avg_resonance:.4f}")
         with m2:
             risk_level = "High Correlation" if avg_resonance > 0.4 else "Diversified"
-            st.metric("Systemic Risk Level", risk_level)
+            st.metric("Systemic Risk Profile", risk_level)
         with m3:
-            # Score out of 100
             diversity_health = max(0, 100 - (avg_resonance * 150))
-            st.metric("Diversity Health Score", f"{diversity_health:.1f}/100")
+            st.metric("Diversity Efficiency Score", f"{diversity_health:.1f}/100")
 
         st.divider()
 
@@ -77,7 +80,7 @@ else:
         col_m, col_t = st.columns([2, 1])
         
         with col_m:
-            st.subheader("Correlation Spectrum Matrix")
+            st.subheader("Cross-Spectral Correlation Matrix")
             fig_matrix = go.Figure(data=go.Heatmap(
                 z=matrix,
                 x=valid_tickers,
@@ -96,35 +99,36 @@ else:
             st.plotly_chart(fig_matrix, width='stretch')
         
         with col_t:
-            st.subheader("Intelligence Report")
-            with st.expander("📖 What is Hidden Resonance?", expanded=True):
+            st.subheader("Analytical Report")
+            with st.expander("Spectral Resonance Methodology", expanded=True):
                 st.markdown("""
-                Traditional correlation only tells you if two stocks move in the same direction. **Resonance** tells you if they share the same *frequency DNA*. 
+                Traditional correlation measurements provide an aggregate view of asset alignment. **Spectral Resonance** decomposes this alignment into specific frequency components.
                 
-                Even if two stocks look uncorrelated in the short term, they might be highly resonant at a **Macro frequency**. 
+                Assets may exhibit decoupling at high frequencies while maintaining high resonance at **low (macro) frequencies**. 
                 
-                **How to read the Matrix:**
-                - **The Brighter the Spot**: The more "in sync" these two assets are. 
-                - **High Resonance (>0.5)**: Your portfolio is dangerously exposed to the same structural shocks.
-                - **Low Resonance (<0.2)**: True mathematical diversification.
+                **Matrix Interpretation:**
+                - **Intensity**: High values indicate synchronized movement across the spectral domain.
+                - **Threshold ( > 0.5)**: Signifies increased exposure to synchronized systemic shocks.
+                - **Lower Bound ( < 0.2)**: Demonstrates high statistical diversification.
                 """)
             
             if avg_resonance > 0.4:
-                st.error("⚠️ **Risk Alert**: Your portfolio assets are highly resonant. A single macro-frequency shock could impact most of your holdings simultaneously.")
+                st.error("Risk Alert: Elevated portfolio resonance detected. Systemic macro-frequency shocks may impact holdings simultaneously.")
             else:
-                st.success("✅ **Diversification Verified**: Your portfolio shows low cross-spectral resonance.")
+                st.success("Diversification Verified: Low cross-spectral resonance confirmed across the analyzed horizon.")
 
         st.divider()
         
-        # 2. Resonance Over Time (Focus on the most resonant pair)
-        if n >= 2:
-            # Find the most resonant pair (excluding diagonal)
-            flat_idx = np.argmax(np.triu(matrix, k=1))
-            row_idx, col_idx = np.unravel_index(flat_idx, matrix.shape)
-            pair1, pair2 = valid_tickers[row_idx], valid_tickers[col_idx]
-            
-            st.subheader(f"Deep-Dive: Most Resonant Pair ({pair1} & {pair2})")
-            
+        # 2. Resonance Over Time (Manual Comparison)
+        st.subheader("Detailed Resonance Investigation")
+        
+        c_sel1, c_sel2 = st.columns(2)
+        pair1 = c_sel1.selectbox("Asset A", valid_tickers, index=0)
+        pair2 = c_sel2.selectbox("Asset B", valid_tickers, index=min(1, len(valid_tickers)-1))
+        
+        if pair1 == pair2:
+            st.warning("Identity relationship: Select two distinct assets for spectral comparison.")
+        else:
             coh, phase, coi, freqs, sig = calculate_coherence(portfolio_data[pair1], portfolio_data[pair2])
             
             fig_detail = go.Figure(data=go.Heatmap(
@@ -134,8 +138,8 @@ else:
                 hovertemplate='<b>Freq:</b> %{y:.3f}<br><b>Resonance:</b> %{z:.4f}<extra></extra>'
             ))
             fig_detail.update_layout(
-                title=f"Cross-Spectral mapping for {pair1} vs {pair2}",
-                xaxis_title="Timeline Blocks",
+                title=f"Detailed Cross-Spectral distribution: {pair1} vs {pair2}",
+                xaxis_title="Timeline Segments",
                 yaxis_title="Frequency",
                 height=400,
                 template="plotly_dark",
@@ -144,6 +148,6 @@ else:
             )
             st.plotly_chart(fig_detail, width='stretch')
             
-            st.info(f"💡 **Insight**: {pair1} and {pair2} share significant energy at the frequencies shown in orange/white. Avoid adding more assets with similar characteristics to maintain your Diversity Health.")
+            st.info(f"Insight: {pair1} and {pair2} exhibit localized coherence at the identified frequencies. Portfolio management should account for shared spectral characteristics between these assets.")
 
-st.sidebar.caption("Securing Institutional Alpha through Math.")
+st.sidebar.caption("Institutional Alpha through Digital Signal Processing.")

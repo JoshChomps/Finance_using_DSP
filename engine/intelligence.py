@@ -8,34 +8,44 @@ def analyze_stance(bands, names):
     stance_data = []
     
     for band, name in zip(bands, names):
-        # Look at the last 5 days to determine recent slope
-        recent_window = band[-5:]
-        slope = np.polyfit(np.arange(len(recent_window)), recent_window, 1)[0]
+        # Look at the last 10 days to determine recent slope for better stability
+        lookback = 10
+        recent_window = band[-lookback:]
+        x = np.arange(len(recent_window))
+        slope, intercept = np.polyfit(x, recent_window, 1)
+        
+        # Normalize slope by band volatility to get 'z-slope' (strength relative to band variance)
+        band_std = np.std(band) if np.std(band) > 0 else 1e-6
+        normalized_strength = slope / band_std
         
         if name == "Underlying Structural Trend":
-            weight = 0.5
+            weight = 0.50
         elif "Quarterly" in name:
-            weight = 0.3
+            weight = 0.25
         elif "Monthly" in name:
             weight = 0.15
+        elif "Weekly" in name:
+            weight = 0.07
         else:
-            weight = 0.05 # high frequency has low weight for 'stance'
+            weight = 0.03 # High frequency has minimal impact on 'stance'
             
         direction = "UP" if slope > 0 else "DOWN"
-        strength = abs(slope)
+        
+        # Score is the weighted normalized strength
+        stance_score = np.clip(normalized_strength * weight * 2, -weight, weight)
         
         stance_data.append({
             "name": name,
             "direction": direction,
-            "strength": strength,
+            "strength": abs(normalized_strength),
             "weight": weight,
-            "score": (1 if slope > 0 else -1) * weight
+            "score": stance_score
         })
         
     total_score = sum([s['score'] for s in stance_data])
     
     # Map score to english
-    if total_score > 0.4:
+    if total_score > 0.25:
         label = "Strong Bullish"
     elif total_score > 0.1:
         label = "Bullish / Accumulating"

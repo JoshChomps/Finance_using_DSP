@@ -1,66 +1,74 @@
-# Market DNA Engine 🧬
-### Institutional-Grade Signal Processing for Alpha Generation
+# Market DNA Engine
+### Institutional Digital Signal Processing for Technical Alpha
 
-Standard quantitative models are failing because they oversimplify the market into a single time-series. The **Market DNA Engine** utilizes Digital Signal Processing (DSP) to mathematically dissect market volatility into its component frequencies—separating the fast, algorithmic "Noise" from the deep, structural "Macro Trends."
-
----
-
-## 🔬 The Core Thesis: Signal vs. Noise
-Linear indicators like Moving Averages (MA) and RSI are fundamentally flawed because they inherit **lag**. By the time an MA-cross happens, the structural shift is already over.
-
-The Market DNA Engine utilizes **Orthogonal Wavelet Decomposition** and **Synchrosqueezing** to isolate market cycles *without phase shift*. This allows for the identification of structural support and resistance before they manifest in lagging technical indicators.
+The Market DNA Engine utilizes Digital Signal Processing (DSP) to decompose market volatility into specific frequency components. This separates algorithmic noise from structural macro trends.
 
 ---
 
-## 🛠️ Integrated Modules
-
-### 1. Price DNA Explorer
-Break down price action into fundamental structural bands:
-- **Structural Trend (Macro)**: The deep, underlying economic direction.
-- **Cycle Momentum (Weekly)**: Institutional swing waves.
-- **Micro-Noise (Intraday)**: High-frequency algorithmic volatility.
-- **Includes**: *Math Integrity Proof* (99.9% reconstruction accuracy).
-
-### 2. Spectral Resonance Guardian
-Traditional correlation measures total movement. **Resonance** measures exactly *which frequencies* assets share. Identify hidden systemic risks when multiple unrelated assets start "vibrating" on the same macro frequency.
-
-### 3. Causal Leadership Flow
-Stop guessing who leads the market. Use **Spectral Granger Causality** to uncover hidden directional leadership between assets at specific time scales.
+## Core Methodology: Signal Extraction
+Linear indicators inherit phase lag. The Market DNA Engine utilizes Orthogonal Wavelet Decomposition and Synchrosqueezing to isolate market cycles without phase shift. This allows for the identification of structural support and resistance prior to manifestation in lagging technical indicators.
 
 ---
 
-## 🚀 Quick Launch
+### Core Analytical Modules
 
-### Local Deployment (3 Minutes)
-1. **Environment Setup**:
+1. **Spectral Decomposition**: Orthogonal signal extraction via Multiresolution Analysis (MRA).
+2. **Cross-Spectral Coherence**: Statistical resonance tracking for identifying leading market indicators.
+3. **Directional Causality**: Evaluation of spectral precedence via lead-lag phase estimation.
+4. **Institutional Backtesting**: Performance simulation with lead-adjusted execution, Kelly Criterion allocation, and risk metrics (Sharpe, Sortino, Calmar, Profit Factor).
+5. **Resonance Guardian**: Real-time portfolio monitoring to detect frequency-domain instability.
+
+---
+
+## Integrated Modules
+
+### 1. Price Decomposition
+Extraction of price action into fundamental structural bands:
+- **Structural Trend (Macro)**: Underlying economic direction.
+- **Cycle Momentum (Intermediate)**: Swing waves.
+- **Micro-Volatility (Intraday)**: High-frequency algorithmic noise.
+- **Validation**: Includes Math Integrity Proof (99.9%+ reconstruction accuracy).
+
+### 2. Spectral Resonance
+Measures frequency-domain cross-correlation. Identify systemic risk when distinct assets exhibit shared macro-frequency resonance.
+
+### 3. Spectral Causality
+Directional leadership detection using Spectral Granger Causality. Uncover hidden leadership between assets at specific time scales.
+
+---
+
+## Deployment
+
+### Local Environment
+1. **Setup**:
    ```powershell
    python -m venv .venv
    .venv\Scripts\activate
    pip install -r requirements.txt
    ```
 
-2. **Pre-load Intelligence Cache**:
+2. **Initialize Cache**:
    ```powershell
    python cache_data.py
    ```
 
-3. **Launch the Engine**:
+3. **Execution**:
    ```powershell
    streamlit run 0_Home.py
    ```
 
-### 📡 Production API Integration
-The engine is decoupled via **FastAPI**. Hook up your HFT bots to pull real-time spectral metrics:
-👉 **[http://localhost:8000/docs](http://localhost:8000/docs)**
+### API Integration
+The engine is accessible via FastAPI for external integration.
+**[http://localhost:8000/docs](http://localhost:8000/docs)**
 
 ---
 
-## 🏗️ The Tech Stack
-- **Math Architecture**: PyWavelets (DWT), ssqueezepy (Synchrosqueezing), pycwt (Coherence).
-- **Inference Engine**: Statsmodels (VAR-based Causality).
-- **UI/UX**: Custom Glassmorphism Streamlit Design System.
-- **Backend**: FastAPI / Pydantic.
+## Architecture
+- **Processing**: PyWavelets (DWT), ssqueezepy (Synchrosqueezing), pycwt (Coherence).
+- **Inference**: Statsmodels (VAR-based Causality).
+- **Interface**: Streamlit Institutional Slate Theme.
+- **Backend**: FastAPI.
 
 ---
-### 🛰️ AlgoFest 2026 Submission
-*Built by Josh. Securing Alpha through Math Integrity.*
+### AlgoFest 2026 Submission
+*Market DNA Engine: Alpha through Signal Processing.*

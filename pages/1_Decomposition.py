@@ -9,26 +9,27 @@ from engine.scalogram import run_cwt_analysis, run_synchrosqueezing, get_magnitu
 from engine.intelligence import analyze_stance, project_structural_trend
 from engine.ui import inject_custom_css
 
-st.set_page_config(page_title="Decomposition Explorer | Market DNA", layout="wide")
-inject_custom_css(st)
-
 st.title("Decomposition Explorer")
 
-# ── Sidebar ────────────────────────────────────────────────────────────────────
+# Sidebar
 st.sidebar.header("Analysis Settings")
 symbol       = st.sidebar.selectbox("Asset Symbol", ["SPY", "QQQ", "GLD", "TLT", "AAPL", "MSFT", "NVDA", "BTC-USD"], index=0)
 wavelet_name = st.sidebar.selectbox("Wavelet Family", ["db4", "sym8", "coif1", "haar"], index=0)
-depth        = st.sidebar.slider("Decomposition Depth", 2, 8, 5)
+depth        = st.sidebar.slider("Decomposition Depth", 1, 8, 5)
 
-# ── Load & Prep ────────────────────────────────────────────────────────────────
+# Load and Prep
 data = get_data(symbol)
 if data is not None:
     returns   = calculate_returns(data)
     norm_data = z_score_normalize(returns)
 
     with st.spinner("Breaking down the signal..."):
-        bands      = slice_signal(norm_data, wavelet=wavelet_name, depth=depth)
-        band_names = create_labels(depth)
+        bands, actual_depth = slice_signal(norm_data, wavelet=wavelet_name, depth=depth)
+        
+        if actual_depth < depth:
+            st.sidebar.warning(f"Depth Adjusted: Model downscaled from {depth} to {actual_depth} due to signal length constraints.")
+            
+        band_names = create_labels(actual_depth)
         is_valid   = check_reconstruction(norm_data, bands)
         stance_label, score, stance_details = analyze_stance(bands, band_names)
 
@@ -38,18 +39,48 @@ if data is not None:
     band_energy  = [np.var(b) for b in cycle_bands]
     dominant_idx = int(np.argmax(band_energy))
 
+    # Sidebar Technical Encyclopedia
+    with st.sidebar.expander("Spectral Dictionary"):
+        st.markdown("""
+        **Frequency (Hz):**
+        The rate of oscillation measured in cycles per day. High frequency = fast noise; low frequency = structural trend.
+        
+        **Period (Days):**
+        The time required for one full cycle ($Period = 1/Frequency$). Investors typically track cycles in days (e.g., a '20-day swing').
+        
+        **Nyquist Limit (0.5):**
+        The theoretical maximum frequency for daily data. One cycle every 2 days.
+        
+        **Energy Share:**
+        The percentage of total signal variance (volatility) attributed to a specific frequency band.
+        """)
+
     # ── Top Intelligence Bar ───────────────────────────────────────────────
     m1, m2, m3 = st.columns(3)
     with m1:
-        st.metric("Current Stance", stance_label, f"{score:+.2f} Strength")
+        st.metric("Current Stance", stance_label, f"{score:+.2f} Strength",
+                  help="Aggregate directional bias derived from the weighted momentum of all spectral components.")
     with m2:
         acc_val = "99.9%+" if is_valid else "98.2%"
-        st.metric("Math Integrity", acc_val, "Matches Price DNA")
+        st.metric("Math Integrity", acc_val, "Matches Price DNA",
+                  help="Reconstruction accuracy verifying that the sum of all decomposed bands equals the original price signal.")
     with m3:
-        conf = "High" if score > 0.4 or score < -0.4 else "Moderate"
-        st.metric("Signal Confidence", conf)
+        conf = "High" if abs(score) > 0.3 else ("Moderate" if abs(score) > 0.1 else "Neutral")
+        st.metric("Signal Confidence", conf,
+                  help="Reliability metric based on the alignment of the Structural Trend and Quarterly Momentum components.")
 
     st.divider()
+    
+    # Mathematical Foundation Expander
+    with st.expander("Mathematical Foundation: Frequency vs. Period", expanded=False):
+        st.markdown("""
+        To translate abstract Digital Signal Processing (DSP) into market insights, we map **Frequency** to **Time (Period)**.
+        - **1.0 Frequency**: Impossible in daily data (requires 1 data point per half-day).
+        - **0.5 Frequency (Nyquist)**: The fastest possible cycle. 1 full wave every 2 trading days.
+        - **0.1 Frequency**: 1 full wave every 10 trading days (approx. 2 calendar weeks).
+        - **0.01 Frequency**: 1 full wave every 100 trading days (Macro/Structural).
+        """)
+
     cumulative_growth = (1 + returns).cumprod() - 1
     dates = returns.index
 
@@ -86,14 +117,14 @@ if data is not None:
     )
     st.plotly_chart(fig_raw, width='stretch')
 
-    # ── 1. Actionable Intelligence Decoder ────────────────────────────────
+    # 1. Actionable Intelligence Decoder
     st.subheader("Actionable Intelligence Decoder")
-    with st.expander("📖 Recent Signal Intelligence", expanded=True):
+    with st.expander("Recent Signal Intelligence", expanded=True):
         col_st, col_tx = st.columns([1, 2])
         with col_st:
             st.write(f"**Symbol**: {symbol}")
             st.write(f"**Recommended Stance**: {stance_label}")
-            st.progress((score + 1) / 2)
+            st.progress(float(np.clip((score + 0.5) / 1.0, 0.0, 1.0)))
         with col_tx:
             st.markdown(f"""
             **Decoder Summary**:
@@ -108,17 +139,14 @@ if data is not None:
 
     st.divider()
 
-    # ── 2. Multi-Resolution Analysis ──────────────────────────────────────
+    # 2. Multi-Resolution Analysis
     st.subheader("Underlying Market Cycles (MRA)")
-    with st.expander("📖 What does this mean?", expanded=True):
+    with st.expander("Methodology Summary", expanded=True):
         st.markdown(f"""
-        **MRA (Multi-Resolution Analysis)** literally separates the fast 'noise' of the market
-        from the deep, slow-moving 'structural' trends.
-        - **Top Lines (Fast Details)**: Fast-paced, high-frequency noise. Often mean-reverting.
-        - **Middle Lines (Swings)**: Multi-day to weekly momentum shifts. Good for swing trading.
-        - **Bottom Line (Macro Trend)**: The smoothed, underlying macroeconomic trend.
-          If the Macro trend is pointing up, {symbol} is in a structural bull market
-          regardless of daily red candles.
+        **MRA (Multi-Resolution Analysis)** separates market noise from deep, structural trends using orthogonal wavelets.
+        - **Top Lines (Fast Details)**: Short-term volatility. Period: 2-5 days.
+        - **Middle Lines (Swings)**: Intermediate price rhythms. Period: 10-40 days.
+        - **Bottom Line (Macro Trend)**: The primary structural path. Period: >50 days.
         """)
 
     fig_dwt = go.Figure()
@@ -128,7 +156,7 @@ if data is not None:
             hovertemplate=f'<b>Date:</b> %{{x|%b %d, %Y}}<br><b>Cycle:</b> {name}<br><b>Momentum:</b> %{{y:.4f}}<extra></extra>'
         ))
     fig_dwt.update_layout(
-        title="Cycle Decomposition (Total Signal Pieces)",
+        title="Cycle Decomposition (Multiresolution View)",
         height=500,
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
@@ -143,12 +171,12 @@ if data is not None:
         "Energy Share (%)": [f"{e:.1f}%" for e in energy_pct],
     })
     st.dataframe(energy_df, hide_index=True, use_container_width=True)
+    st.caption("Energy Share indicates the percentage of total variance (volatility) encapsulated within each specific cycle band.")
 
-    # ── 3. Time-Frequency Energy Heatmap ──────────────────────────────────
-    st.divider()
+    # 3. Time-Frequency Energy Heatmap
     st.subheader("Time-Frequency Energy Heatmap")
 
-    with st.expander("📖 How to read this Heatmap", expanded=True):
+    with st.expander("Scalogram Interpretation", expanded=True):
         st.markdown(f"""
         This scalogram shows where the **energy (volatility)** of {symbol} is concentrated
         at any given point in time.

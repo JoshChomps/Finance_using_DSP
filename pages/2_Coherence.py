@@ -12,18 +12,18 @@ inject_custom_css(st)
 
 st.title("Cross-Asset Resonance")
 
-# ── Sidebar ────────────────────────────────────────────────────────────────────
+# Sidebar
 st.sidebar.header("Comparison Settings")
 first_sym  = st.sidebar.selectbox("First Asset",  ["SPY", "QQQ", "GLD", "TLT", "AAPL", "MSFT"], index=0)
 second_sym = st.sidebar.selectbox("Second Asset", ["SPY", "QQQ", "GLD", "TLT", "AAPL", "MSFT"], index=2)
 min_coh_threshold = st.sidebar.slider(
     "Min Coherence for Lead/Lag",
     0.3, 0.9, 0.5, 0.05,
-    help="Only show lead/lag estimates where average coherence exceeds this level.",
+    help="Filter for lead/lag estimates where average coherence exceeds the specified level.",
 )
 
 if first_sym == second_sym:
-    st.warning("Please select two different assets to compare.")
+    st.warning("Select two distinct assets for cross-spectral comparison.")
 else:
     data1 = get_data(first_sym)
     data2 = get_data(second_sym)
@@ -36,63 +36,82 @@ else:
         norm1 = z_score_normalize(returns1)
         norm2 = z_score_normalize(returns2)
 
-        st.subheader(f"Analyzing {first_sym} vs {second_sym}")
+        st.subheader(f"Cross-Spectral Analysis: {first_sym} vs {second_sym}")
+        
+        y_scale_type = st.radio("Y-Axis Scale Type", ["Logarithmic (Classic)", "Linear (Structural)"], horizontal=True)
 
-        with st.spinner("Calculating resonance..."):
+        with st.spinner("Calculating resonance:"):
             sample_size = 750
             dates   = norm1.tail(sample_size).index
             series1 = norm1.tail(sample_size).values
             series2 = norm2.tail(sample_size).values
             resonance_map, phase, coi, freqs, sig = calculate_coherence(series1, series2)
 
-        # ── 1. Coherence Heatmap ───────────────────────────────────────────────
-        fig_heat = go.Figure(data=go.Heatmap(
+        # Period calculation (1/f)
+        # Avoid division by zero
+        periods = np.array([1.0 / f if f > 0 else 1000 for f in freqs])
+        
+        # 1. Coherence Heatmap (Period-Based)
+        fig_heat = go.Figure()
+
+        # Add Heatmap
+        fig_heat.add_trace(go.Heatmap(
             z=resonance_map,
             x=dates,
-            y=freqs,
+            y=periods,
             colorscale="Hot",
             showscale=True,
-            colorbar=dict(title="Resonance"),
+            colorbar=dict(title="Coherence"),
             zmin=0, zmax=1,
-            hovertemplate='<b>Date:</b> %{x|%b %d, %Y}<br><b>Frequency:</b> %{y:.3f}<br><b>Resonance:</b> %{z:.3f}<extra></extra>'
+            hovertemplate='<b>Date:</b> %{x|%b %d, %Y}<br><b>Period:</b> %{y:.1f} Days<br><b>Coherence:</b> %{z:.3f}<extra></extra>'
         ))
+
+        # Add COI Mask (Semi-transparent area)
+        # We mask the area WHERE period > coi (or freq < 1/coi)
+        # Essentially the 'outside' of the cone.
+        coi_periods = coi
         fig_heat.add_trace(go.Scatter(
-            x=dates,
-            y=1.0 / coi,
-            name="COI Boundary",
-            line=dict(color='white', dash='dash'),
-            showlegend=True,
-            hoverinfo='skip'
+            x=np.concatenate([dates, dates[::-1]]),
+            y=np.concatenate([coi_periods, [max(periods)] * len(dates)]),
+            fill='toself',
+            fillcolor='rgba(0, 0, 0, 0.6)',
+            line=dict(color='rgba(255, 255, 255, 0.2)', width=1),
+            name="Cone of Influence (Unreliable)",
+            hoverinfo='skip',
+            showlegend=True
         ))
+
         fig_heat.update_layout(
-            title=f"Wavelet Coherence: {first_sym} vs {second_sym}",
+            title=f"Wavelet Coherence (Time-Period Distribution)",
             xaxis_title="Date",
-            yaxis_title="Relative Frequency",
+            yaxis_title="Cycle Period (Days)",
+            yaxis_type="log" if "Logarithmic" in y_scale_type else "linear",
             height=600,
             paper_bgcolor="rgba(0,0,0,0)",
             plot_bgcolor="rgba(0,0,0,0)",
-            template="plotly_dark"
+            template="plotly_dark",
+            yaxis=dict(autorange="reversed") # Standard for periods (Fast top, Macro bottom)
         )
         st.plotly_chart(fig_heat, width='stretch')
 
-        # ── 2. Average Coherence by Frequency ─────────────────────────────────
+        # 2. Average Coherence by Period
         st.divider()
         col1, col2 = st.columns(2)
         with col1:
             mean_by_freq = np.mean(resonance_map, axis=1)
-            periods_days = np.array([1 / f if f > 0.001 else 1000 for f in freqs])
 
             fig_bar = go.Figure()
             fig_bar.add_trace(go.Scatter(
-                x=periods_days, y=mean_by_freq, fill='tozeroy', mode='lines',
+                x=periods, y=mean_by_freq, fill='tozeroy', mode='lines',
                 line=dict(color='#00E676'),
                 hovertemplate='<b>Cycle Period:</b> %{x:.1f} Days<br><b>Avg Strength:</b> %{y:.4f}<extra></extra>'
             ))
             fig_bar.update_layout(
-                title="Average Strength Per Cycle",
-                xaxis_title="Period (Days per Cycle)",
-                yaxis_title="Strength",
+                title="Spectral Power Density (by Period)",
+                xaxis_title="Cycle Period (Days)",
+                yaxis_title="Coherence Strength",
                 yaxis_range=[0, 1],
+                xaxis_type="log" if "Logarithmic" in y_scale_type else "linear",
                 paper_bgcolor="rgba(0,0,0,0)",
                 plot_bgcolor="rgba(0,0,0,0)",
                 template="plotly_dark"
@@ -100,35 +119,34 @@ else:
             st.plotly_chart(fig_bar, width='stretch')
 
         with col2:
-            st.subheader("Qualitative Summary")
+            st.subheader("Statistical Summary")
             st.markdown(f"""
-            #### How to read this chart
-            - **Glowing Areas**: Strong resonance. {first_sym} and {second_sym} are moving
-              together at these specific cycle speeds.
-            - **Dark Areas**: Complete decoupling. The assets are charting their own paths.
-            - **Dashed V-Shape**: The "Cone of Influence". Ignore data outside this cone,
-              as boundary math artifacts can distort the signal.
+            #### Structural Terminology
+            - **Cycle Period**: The estimated duration of a market rhythm in trading days. 
+            - **Nyquist Limit (2.0 Days)**: The fastest discernible period. Corresponds to a frequency of 0.5.
+            - **Cone of Influence (COI)**: The shaded region where spectral estimates are contaminated by zero-padding at the signal boundaries.
+            
+            **Period Mapping:**
+            | Period (Days) | Frequency | Classification |
+            |---|---|---|
+            | 2-5 | 0.5-0.2 | Micro-Volatility |
+            | 10-30 | 0.1-0.03 | Swing Momentum |
+            | 100+ | < 0.01 | Macro / Structural |
 
-            **Note on the Y-Axis (max 0.5):**
-            The frequency only goes up to `0.5` due to the Nyquist Limit — the fastest
-            measurable cycle with daily data takes 2 days (1 cycle / 2 days = 0.5 Hz).
-            For higher frequencies, you need intraday data.
-
-            **Quick Stats**
-            | | |
+            **Core Statistics**
+            | Parameter | Value |
             |---|---|
-            | Overall avg resonance | `{np.mean(resonance_map):.3f}` |
-            | Peak resonance | `{np.max(resonance_map):.3f}` |
-            | Most coherent cycle | `~{1/freqs[np.argmax(np.mean(resonance_map, axis=1))]:.0f} days` |
+            | Aggregate Mean Coherence | `{np.mean(resonance_map):.3f}` |
+            | Peak Coherence | `{np.max(resonance_map):.3f}` |
+            | Primary Resonant Mode | `~{periods[np.argmax(np.mean(resonance_map, axis=1))]:.0f} days` |
             """)
 
-        # ── 3. Lead / Lag Analysis ────────────────────────────────────────────
+        # 3. Lead / Lag Analysis
         st.divider()
-        st.subheader("⏱ Lead / Lag Analysis")
+        st.subheader("Phase Angle Lead / Lag Analysis")
         st.markdown(
-            "The **phase angle** between two coherent assets reveals which one moves "
-            "first and by how many days — a directional trading edge that standard "
-            "correlation metrics cannot provide."
+            "The phase relationship between coherent signals determines directional precedence. "
+            "This identifies which asset initiates a move across specific frequency bands."
         )
 
         summary = compute_lead_lag_summary(
@@ -138,8 +156,8 @@ else:
 
         if not summary:
             st.info(
-                f"No frequency bands found with coherence ≥ {min_coh_threshold:.2f} "
-                "inside the cone of influence. Try lowering the threshold."
+                f"No frequency bands identified with coherence exceeding {min_coh_threshold:.2f} "
+                "within the clinical boundary. Adjust the threshold parameters."
             )
         else:
             df = pd.DataFrame(summary)
@@ -162,10 +180,9 @@ else:
             ))
             fig_ll.add_hline(y=0, line_color="white", line_width=1)
             fig_ll.update_layout(
-                title=f"Lead/Lag Days by Cycle Period "
-                      f"(green = {first_sym} leads, red = {second_sym} leads)",
+                title=f"Lead/Lag Allocation (Green: {first_sym} Leads, Red: {second_sym} Leads)",
                 xaxis_title="Cycle Period",
-                yaxis_title="Lead Days (+ve = first asset leads)",
+                yaxis_title="Lead/Lag Days",
                 height=400,
                 paper_bgcolor="rgba(0,0,0,0)",
                 plot_bgcolor="rgba(0,0,0,0)",
@@ -180,11 +197,8 @@ else:
             period   = best["period_days"]
 
             st.success(
-                f"**Strongest signal** (coherence {best['avg_coherence']:.2f}): "
-                f"At the **~{period:.0f}-day cycle**, **{leader}** leads **{follower}** "
-                f"by approximately **{lag_days:.1f} days**. "
-                f"Recent moves in {leader} tend to be followed by similar moves "
-                f"in {follower} within that window at this frequency."
+                f"Principal Signal: At the **~{period:.0f}-day cycle**, **{leader}** leads **{follower}** "
+                f"by **{lag_days:.1f} days** (Coherence: {best['avg_coherence']:.2f})."
             )
 
             display_df = df.copy()
@@ -193,16 +207,16 @@ else:
                 if r["first_leads"] else f"{second_sym} ({r['lead_days']:.1f}d)", axis=1
             )
             display_df = display_df[["period_days", "avg_coherence", "Leader"]].rename(columns={
-                "period_days":   "Cycle Period (days)",
-                "avg_coherence": "Avg Coherence",
+                "period_days":   "Period (Days)",
+                "avg_coherence": "Mean Coherence",
             })
             st.dataframe(display_df, hide_index=True, use_container_width=True)
 
             st.caption(
-                "⚠️ The CWT is non-causal: phase estimates at time *t* incorporate "
-                "nearby future data. Treat this as a structural tendency, not a "
-                "precise real-time signal. Validate any strategy out-of-sample."
+                "Methodological Note: The continuous wavelet transform (CWT) is structurally non-causal. "
+                "Phase relationship estimates at localized points in time incorporate adjacent data. "
+                "This serves as a structural tendency measurement rather than an execution-ready signal."
             )
 
     else:
-        st.error("We had trouble loading data for those specific symbols.")
+        st.error("Error in data acquisition for the selected asset pair.")

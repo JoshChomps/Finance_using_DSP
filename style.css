@@ -1,127 +1,99 @@
-/* FinSignal Suite: Institutional "Market DNA" Design System */
+/* Market DNA Engine: Institutional Research Aesthetic */
 
-/* Root variable fallbacks and premium color palette */
 :root {
-    --brand-accent: #00ffa3; /* Neon Cyan-Green */
-    --brand-secondary: #7000ff; /* Electric Violet */
-    --bg-card: rgba(17, 25, 40, 0.75);
-    --border-glow: rgba(0, 255, 163, 0.15);
-    --transition-speed: 0.4s;
+    --bg-main: #0d1117;
+    --bg-surface: #161b22;
+    --border-main: #30363d;
+    --accent-emerald: #2ea043;
+    --accent-blue: #58a6ff;
+    --text-primary: #c9d1d9;
+    --text-muted: #8b949e;
+    --font-heading: 'Outfit', -apple-system, sans-serif;
+    --font-body: 'Inter', -apple-system, sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
 }
 
-/* Typography from Google Fonts */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Outfit:wght@500;700&family=JetBrains+Mono:wght@400;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Outfit:wght@600;700&family=JetBrains+Mono:wght@400;600&display=swap');
 
-/* Main App Container Styling */
+/* Reset and Global Styles */
 .stApp {
-    background-image: radial-gradient(circle at 50% 50%, #0d1117 0%, #010409 100%);
-    font-family: 'Inter', sans-serif;
-    color: #c9d1d9;
+    background-color: var(--bg-main);
+    color: var(--text-primary);
+    font-family: var(--font-body);
 }
 
-/* Institutional Headings */
 h1, h2, h3, h4 {
-    font-family: 'Outfit', sans-serif !important;
+    font-family: var(--font-heading) !important;
     font-weight: 700 !important;
-    letter-spacing: -0.03em !important;
     color: #ffffff !important;
-    text-shadow: 0 0 20px rgba(0, 255, 163, 0.1);
+    letter-spacing: -0.02em !important;
 }
 
-/* Custom Header with Gradient */
-.header-gradient {
-    background: linear-gradient(90deg, #00ffa3, #7000ff);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    font-weight: 800;
-}
-
-/* Dynamic Glassmorphism for Sidebar */
+/* Sidebar: Solid Institutional Carbon */
 [data-testid="stSidebar"] {
-    background: rgba(1, 4, 9, 0.8) !important;
-    backdrop-filter: blur(20px) saturate(180%) !important;
-    -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
-    border-right: 1px solid rgba(0, 255, 163, 0.1) !important;
+    background-color: #010409 !important;
+    border-right: 1px solid var(--border-main) !important;
 }
 
-/* Premium Buttons */
-.stButton>button {
-    background: linear-gradient(135deg, #00ffa3 0%, #00d1a0 100%) !important;
-    color: #010409 !important;
-    font-weight: 600 !important;
-    border: none !important;
-    border-radius: 8px !important;
-    padding: 0.6rem 2rem !important;
-    text-transform: uppercase;
-    font-size: 0.8rem;
-    letter-spacing: 0.05em;
-    box-shadow: 0 4px 15px rgba(0, 255, 163, 0.2) !important;
-    transition: all 0.3s ease !important;
+/* Metric Cards: No Glass, Solid Slate */
+[data-testid="stMetric"] {
+    background-color: var(--bg-surface) !important;
+    border: 1px solid var(--border-main) !important;
+    border-radius: 4px !important;
+    padding: 1rem !important;
 }
 
-.stButton>button:hover {
-    transform: translateY(-2px) !important;
-    box-shadow: 0 8px 25px rgba(0, 255, 163, 0.4) !important;
-    filter: brightness(1.1);
-}
-
-/* Metrics and Data Cards - Institutional Look */
 [data-testid="stMetricValue"] {
-    font-size: 2.4rem !important;
-    color: var(--brand-accent) !important;
-    font-weight: 700 !important;
-    font-family: 'Outfit', sans-serif;
+    font-family: var(--font-heading) !important;
+    color: #ffffff !important;
+    font-size: 2rem !important;
 }
 
 [data-testid="stMetricLabel"] {
-    font-family: 'JetBrains Mono', monospace !important;
+    font-family: var(--font-mono) !important;
     text-transform: uppercase;
     letter-spacing: 0.1em;
-    font-size: 0.75rem !important;
-    opacity: 0.7;
+    font-size: 0.7rem !important;
+    color: var(--text-muted) !important;
 }
 
-[data-testid="stMetric"] {
-    background: var(--bg-card) !important;
-    padding: 1.5rem !important;
-    border-radius: 16px !important;
-    border: 1px solid var(--border-glow) !important;
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37) !important;
-    backdrop-filter: blur(4px) !important;
-    -webkit-backdrop-filter: blur(4px) !important;
+/* Buttons: Minimalist Emerald */
+.stButton>button {
+    background-color: var(--accent-emerald) !important;
+    color: #ffffff !important;
+    border-radius: 4px !important;
+    border: none !important;
+    font-weight: 600 !important;
+    padding: 0.5rem 1rem !important;
+    transition: filter 0.2s ease !important;
 }
 
-/* Specific Card Glow for "Bullish" or positive metrics */
-[data-testid="stMetric"]:hover {
-    border: 1px solid rgba(0, 255, 163, 0.4) !important;
-    transition: 0.3s;
+.stButton>button:hover {
+    filter: brightness(1.1) !important;
 }
 
-/* Expander Overrides */
+/* Expanders and Alerts */
 .streamlit-expanderHeader {
     background-color: transparent !important;
-    font-weight: 600 !important;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+    border-bottom: 1px solid var(--border-main) !important;
 }
 
-/* Code and Mono Font overrides */
-code {
-    font-family: 'JetBrains Mono', monospace !important;
-    color: #ff79c6 !important;
-}
-
-/* Info Messages Enhancement */
 .stAlert {
-    background-color: rgba(0, 255, 163, 0.05) !important;
-    color: #ffffff !important;
-    border: 1px solid rgba(0, 255, 163, 0.2) !important;
-    border-radius: 12px !important;
+    background-color: var(--bg-surface) !important;
+    border: 1px solid var(--border-main) !important;
+    color: var(--text-primary) !important;
+    border-radius: 4px !important;
 }
 
-/* Divider logic */
+/* Charts and Dividers */
 hr {
-    margin: 3rem 0 !important;
     border: 0;
     height: 1px;
-    background-image: linear-gradient(to right, rgba(0,0,0,0), rgba(0,255,163,0.3), rgba(0,0,0,0)) !important;
+    background-color: var(--border-main) !important;
+    margin: 2rem 0 !important;
+}
+
+/* Overriding dataframes for better data density */
+.stDataFrame {
+    border: 1px solid var(--border-main) !important;
 }

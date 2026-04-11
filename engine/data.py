@@ -13,8 +13,8 @@ CACHE_FOLDER = os.getenv('FIN_DATA_CACHE', DEFAULT_CACHE)
 @lru_cache(maxsize=32)
 def get_data(symbol, period='5y', interval='1d', use_cache=True):
     """
-    Grabs historical price data. We check the local cache first to save time 
-    and avoid hitting rate limits.
+    Retrieves historical price data. Checks local secondary storage first 
+    to optimize retrieval latency and mitigate rate limiting.
     """
     if not os.path.exists(CACHE_FOLDER):
         os.makedirs(CACHE_FOLDER)
@@ -46,7 +46,7 @@ def get_data(symbol, period='5y', interval='1d', use_cache=True):
         prices.to_parquet(file_path)
         return prices
     except Exception as e:
-        print(f"Oops, ran into an issue fetching {symbol}: {e}")
+        print(f"Error in data acquisition for {symbol}: {e}")
         
         # Last ditch effort: try to find any existing file for this asset
         for filename in os.listdir(CACHE_FOLDER):
