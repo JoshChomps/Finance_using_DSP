@@ -15,40 +15,45 @@ def check_standard_causality(data, lags=5):
 
 def analyze_causal_flow(data, maxlag=5, resolution=100):
     """
-    Measures the strength of leadership between two assets across 
-    different cycles (frequencies).
+    Measures the directional leadership (Geweke Causality) between two assets 
+    across the frequency domain (0 to 0.5 Hz).
+    
+    Decomposes total spectral power into:
+    Total Power = Intrinsic (Unpredictable) Power + Causal (Predictable) Power.
     """
     rows, cols = data.shape
     if cols != 2:
-        raise ValueError("We only support comparing two variables right now.")
+        raise ValueError("Dimensional mismatch: analyze_causal_flow requires a bivariate system.")
 
-    # 1. Fit the Vector Auto-Regression model
+    # 1. Fit Vector Auto-Regression (VAR) Model
     var_model = VAR(data)
     fit_result = var_model.fit(maxlag)
     lag_order = fit_result.k_ar
-    
-    # Grab the model coefficients and the errors
     coefficients = fit_result.coefs
     resid_cov = fit_result.sigma_u
     
-    # 2. Setup the frequency range (normalized 0 to 0.5)
+    # 2. Setup Frequency Grid
     freq_bins = np.linspace(0, 0.5, resolution)
-    
     flow_yx = np.zeros(resolution)
     flow_xy = np.zeros(resolution)
     
+    # 3. Frequency-Domain Decomposition
     for i, f in enumerate(freq_bins):
-        # 3. Calculate the Transfer Function H at this frequency
+        # Calculate Transfer Matrix H(f) = [I - sum(A_k * e^-i2pikf)]^-1
         identity = np.eye(cols, dtype=complex)
         for k in range(1, lag_order + 1):
             identity -= coefficients[k-1] * np.exp(-1j * 2 * np.pi * f * k)
         
-        transfer_matrix = np.linalg.inv(identity)
+        try:
+            transfer_matrix = np.linalg.inv(identity)
+        except np.linalg.LinAlgError:
+            continue # Skip singular frequencies
         
-        # 4. Get the Spectral Density Matrix
+        # Spectral Density Matrix S(f) = H(f) * Sigma * H(f)*
         spectrum = transfer_matrix @ resid_cov @ transfer_matrix.conj().T
         
-        # 5. Geweke's measure of causality
+        # 4. Geweke's Measure: Contrast Total Power with Intrinsic Power
+        # Intrinsic Power is the portion of the spectrum NOT attributable to the co-asset.
         var_x = resid_cov[0, 0]
         var_y = resid_cov[1, 1]
         cov_xy = resid_cov[0, 1]
@@ -56,14 +61,14 @@ def analyze_causal_flow(data, maxlag=5, resolution=100):
         h_xy = transfer_matrix[0, 1]
         h_yx = transfer_matrix[1, 0]
         
-        # Guarantee real positive spectral values (tiny negatives from floating point)
         spec_xx = max(1e-12, spectrum[0, 0].real)
         spec_yy = max(1e-12, spectrum[1, 1].real)
 
-        # Avoid division by zero or negative logs with a small epsilon.
-        # Geweke's measure is non-negative by construction; clip any numerical noise.
-        denom_yx = spec_xx - (var_y - cov_xy**2/var_x) * np.abs(h_xy)**2
-        denom_xy = spec_yy - (var_x - cov_xy**2/var_y) * np.abs(h_yx)**2
+        # Causal Contribution from Y to X
+        # denom = Intrinsic Power of X
+        denom_yx = spec_xx - (var_y - cov_xy**2/max(1e-12, var_x)) * np.abs(h_xy)**2
+        # Causal Contribution from X to Y
+        denom_xy = spec_yy - (var_x - cov_xy**2/max(1e-12, var_y)) * np.abs(h_yx)**2
 
         flow_yx[i] = max(0.0, np.log(spec_xx / max(1e-12, denom_yx)))
         flow_xy[i] = max(0.0, np.log(spec_yy / max(1e-12, denom_xy)))

@@ -5,196 +5,202 @@ import plotly.graph_objects as go
 from engine.data import get_data
 from engine.utils import calculate_returns, z_score_normalize
 from engine.coherence import calculate_coherence, compute_lead_lag_summary
+from engine.intelligence import analyze_resonance, get_execution_playbook
 from engine.ui import inject_custom_css
 
-st.set_page_config(page_title="Cross-Asset Resonance | FinSignal Suite", layout="wide")
+st.set_page_config(page_title="Portfolio Resonance Guardian | Market DNA", layout="wide")
 inject_custom_css(st)
 
-st.title("🤝 Cross-Asset Resonance")
+st.title("Portfolio Resonance Guardian")
 
 # ── Sidebar ────────────────────────────────────────────────────────────────────
-st.sidebar.header("Comparison Settings")
-first_sym  = st.sidebar.selectbox("First Asset",  ["SPY", "QQQ", "GLD", "TLT", "AAPL", "MSFT"], index=0)
-second_sym = st.sidebar.selectbox("Second Asset", ["SPY", "QQQ", "GLD", "TLT", "AAPL", "MSFT"], index=2)
-min_coh_threshold = st.sidebar.slider(
-    "Min Coherence for Lead/Lag",
-    0.3, 0.9, 0.5, 0.05,
-    help="Only show lead/lag estimates where average coherence exceeds this level.",
-)
+st.sidebar.header("Asset Comparison")
+first_sym  = st.sidebar.selectbox("Primary Asset", ["SPY", "QQQ", "GLD", "TLT", "AAPL", "MSFT", "NVDA", "BTC-USD"], index=0)
+second_sym = st.sidebar.selectbox("Compare Against", ["SPY", "QQQ", "GLD", "TLT", "AAPL", "MSFT", "NVDA", "BTC-USD"], index=1)
 
+st.sidebar.divider()
+st.sidebar.header("Analysis Parameters")
+analysis_window = st.sidebar.slider("Analysis Window (Days)", 250, 2000, 750, 
+                                     help="The lookback period for wavelet coherence calculation.")
+y_scale_type = st.sidebar.radio("Spectral Resolution", ["Logarithmic (Classic)", "Linear (Structural)"], index=0)
+
+# ── Load and Prep ──────────────────────────────────────────────────────────────
 if first_sym == second_sym:
-    st.warning("Please select two different assets to compare.")
+    st.error("Select distinct assets for resonance analysis.")
 else:
     data1 = get_data(first_sym)
     data2 = get_data(second_sym)
 
     if data1 is not None and data2 is not None:
-        min_size = min(len(data1), len(data2))
-        returns1 = calculate_returns(data1).tail(min_size)
-        returns2 = calculate_returns(data2).tail(min_size)
+        returns1 = calculate_returns(data1)
+        returns2 = calculate_returns(data2)
 
-        norm1 = z_score_normalize(returns1)
-        norm2 = z_score_normalize(returns2)
+        # Sync dates
+        common_idx = returns1.index.intersection(returns2.index)
+        if len(common_idx) > 200:
+            norm1 = z_score_normalize(returns1.loc[common_idx])
+            norm2 = z_score_normalize(returns2.loc[common_idx])
+            with st.spinner("Calculating lead/lag resonance..."):
+                dates   = norm1.tail(analysis_window).index
+                series1 = norm1.tail(analysis_window).values
+                series2 = norm2.tail(analysis_window).values
+                resonance_map, phase_map, coi, freqs, sig = calculate_coherence(series1, series2)
+                
+                # Clinical Lead/Lag Attribution
+                summary = compute_lead_lag_summary(phase_map, freqs, resonance_map, coi)
+                regime, avg_coh, description = analyze_resonance(summary)
 
-        st.subheader(f"Analyzing {first_sym} vs {second_sym}")
+            periods = np.array([1.0 / f if f > 0 else 1000 for f in freqs])
+            
+            # ── 0. Strategy Analysis Matrix ──────────────────────────
+            st.subheader("Strategy Analysis Matrix")
+            with st.expander("Primary Resonance Intelligence", expanded=True):
+                col1, col2 = st.columns([1, 2])
+                with col1:
+                    st.markdown(f"**CURRENT REGIME**")
+                    st.header(regime)
+                    
+                    st.markdown("**RESONANCE FORCE**")
+                    st.progress(avg_coh)
+                    st.caption(f"Weighted Spectral Alignment: {avg_coh:.3f}")
+                    
+                with col2:
+                    st.markdown("**Analysis Methodology**")
+                    st.write(f"The engine detects a **{regime}** state between {first_sym} and {second_sym}. {description}")
+                    
+                    if summary:
+                        dominant = summary[np.argmax([r['avg_coherence'] for r in summary])]
+                        lead_text = f"leads (by {dominant['lead_days']}d)" if dominant['lead_days'] > 0 else f"lags (by {abs(dominant['lead_days'])}d)"
+                        st.markdown(f"**Tactical Lead/Lag Attribution**: The primary asset Currently **{lead_text}** on the dominant **~{dominant['period_days']}d** cycle.")
 
-        with st.spinner("Calculating resonance..."):
-            sample_size = 750
-            dates   = norm1.tail(sample_size).index
-            series1 = norm1.tail(sample_size).values
-            series2 = norm2.tail(sample_size).values
-            resonance_map, phase, coi, freqs, sig = calculate_coherence(series1, series2)
+                    # Execution Playbook Injection
+                    st.markdown("**Execution Playbook**")
+                    playbook = get_execution_playbook("Coherence", regime)
+                    for step in playbook:
+                        st.write(step)
 
-        # Convert frequencies to periods (days) for a more intuitive y-axis
-        periods = np.array([1.0 / f if f > 0 else np.nan for f in freqs])
+            # ── 1. Coherence Heatmap (Wavelet Intensity) ───────────────────────
+            st.subheader(f"Cross-Spectral Coherence: {first_sym} vs {second_sym}")
+            fig_heat = go.Figure()
 
-        # ── 1. Coherence Heatmap ───────────────────────────────────────────────
-        fig_heat = go.Figure(data=go.Heatmap(
-            z=resonance_map,
-            x=dates,
-            y=periods,
-            colorscale="Hot",
-            showscale=True,
-            colorbar=dict(title="Coherence"),
-            zmin=0, zmax=1,
-            hovertemplate='<b>Date:</b> %{x|%b %d, %Y}<br><b>Period:</b> %{y:.1f} days<br><b>Coherence:</b> %{z:.3f}<extra></extra>',
-        ))
-        # COI overlay — shade the unreliable outer region
-        fig_heat.add_trace(go.Scatter(
-            x=np.concatenate([dates, dates[::-1]]),
-            y=np.concatenate([coi, [np.nanmax(periods)] * len(dates)]),
-            fill='toself',
-            fillcolor='rgba(0, 0, 0, 0.55)',
-            line=dict(color='rgba(255, 255, 255, 0.3)', width=1),
-            name="Outside COI (unreliable)",
-            hoverinfo='skip',
-        ))
-        fig_heat.update_layout(
-            title=f"Wavelet Coherence: {first_sym} vs {second_sym}",
-            xaxis_title="Date",
-            yaxis_title="Cycle Period (days)",
-            yaxis=dict(autorange="reversed"),   # fast cycles at top, macro at bottom
-            height=550,
-        )
-        st.plotly_chart(fig_heat, use_container_width=True)
-
-        # ── 2. Average Coherence by Frequency ─────────────────────────────────
-        st.divider()
-        col1, col2 = st.columns(2)
-        with col1:
-            mean_by_freq = np.mean(resonance_map, axis=1)
-            period_labels = [f"{1/f:.0f}d" if f > 0 else "∞" for f in freqs]
-            fig_bar = go.Figure(go.Bar(
-                x=period_labels, y=mean_by_freq,
-                marker_color=mean_by_freq,
-                marker_colorscale="Hot",
+            fig_heat.add_trace(go.Heatmap(
+                z=resonance_map,
+                x=dates,
+                y=periods,
+                colorscale="Viridis",
+                showscale=True,
+                colorbar=dict(title="Resonance", thickness=15),
+                zmin=0, zmax=1,
+                hovertemplate='<b>Date:</b> %{x|%b %d, %Y}<br><b>Period:</b> %{y:.1f}d<br><b>Strength:</b> %{z:.3f}<extra></extra>'
             ))
-            fig_bar.update_layout(
-                title="Average Coherence by Cycle Period",
-                xaxis_title="Cycle Period",
-                yaxis_title="Mean Coherence",
-                yaxis_range=[0, 1],
+
+            # Add COI Mask
+            fig_heat.add_trace(go.Scatter(
+                x=np.concatenate([dates, dates[::-1]]),
+                y=np.concatenate([coi, [max(periods)] * len(dates)]),
+                fill='toself', fillcolor='rgba(0, 0, 0, 0.6)',
+                line=dict(color='rgba(255, 255, 255, 0.1)', width=0.5),
+                name="Cone of Influence", hoverinfo='skip', showlegend=True
+            ))
+
+            # Dynamic Y-Axis Ticks for Log Scale Clarity
+            tick_vals = [2, 5, 10, 20, 40, 60, 120, 252, 500]
+            tick_text = [str(v) for v in tick_vals]
+
+            fig_heat.update_layout(
+                height=450, margin=dict(l=0, r=0, t=10, b=0),
+                template="plotly_dark",
+                font=dict(family="JetBrains Mono"),
+                yaxis_title="Cycle Period (Days)",
+                yaxis_type="log" if "Logarithmic" in y_scale_type else "linear",
+                yaxis=dict(
+                    autorange="reversed", 
+                    gridcolor='#1a1d21',
+                    tickvals=tick_vals if "Logarithmic" in y_scale_type else None,
+                    ticktext=tick_text if "Logarithmic" in y_scale_type else None
+                ),
+                xaxis=dict(gridcolor='#1a1d21')
             )
-            st.plotly_chart(fig_bar, use_container_width=True)
+            st.plotly_chart(fig_heat, use_container_width=True)
 
-        with col2:
-            st.markdown(f"""
-            #### How to read this
-            - **Bright/hot areas** on the heatmap: these two assets are strongly
-              synchronized at that frequency and time window.
-            - **Dark areas**: the assets are decoupled — moving independently.
-            - **Dashed boundary**: the Cone of Influence. Results outside it are
-              unreliable due to edge effects in the wavelet transform.
+            # ── 2. Cross-Spectral Phase (Lead/Lag Topology) ────────────────────
+            st.subheader("Cross-Spectral Phase Topology")
+            with st.expander("Interpretation Guide: Phase Angle", expanded=False):
+                st.markdown("""
+                **Phase Angle (Radians)** indicates the temporal shift between two assets:
+                - **0 rad**: Perfect in-phase synchronization.
+                - **+pi/2 rad**: Primary asset leads by 1/4 cycle.
+                - **-pi/2 rad**: Primary asset lags by 1/4 cycle.
+                - **pi rad**: Perfect anti-phase (inverse) correlation.
+                """)
 
-            **Quick Stats**
-            | | |
-            |---|---|
-            | Overall avg coherence | `{np.mean(resonance_map):.3f}` |
-            | Peak coherence | `{np.max(resonance_map):.3f}` |
-            | Most coherent cycle | `~{1/freqs[np.argmax(np.mean(resonance_map, axis=1))]:.0f} days` |
-            """)
-
-        # ── 3. Lead / Lag Analysis ────────────────────────────────────────────
-        st.divider()
-        st.subheader("⏱ Lead / Lag Analysis")
-        st.markdown(
-            "The **phase angle** between two coherent assets reveals which one moves "
-            "first and by how many days — a directional trading edge that standard "
-            "correlation metrics cannot provide."
-        )
-
-        summary = compute_lead_lag_summary(
-            phase, freqs, resonance_map, coi,
-            min_coherence=min_coh_threshold,
-        )
-
-        if not summary:
-            st.info(
-                f"No frequency bands found with coherence ≥ {min_coh_threshold:.2f} "
-                "inside the cone of influence. Try lowering the threshold."
+            target_idx = st.selectbox("Isolate Frequency Band for Phase Analysis", range(len(freqs)),
+                                      format_func=lambda i: f"~{periods[i]:.0f}-day cycle", index=len(freqs)//3)
+            
+            fig_pha = go.Figure()
+            fig_pha.add_trace(go.Scatter(x=dates, y=phase_map[target_idx], name="Phase Angle", line=dict(color='#a78bfa', width=2)))
+            fig_pha.add_hline(y=0, line_dash="dash", line_color="white")
+            fig_pha.update_layout(
+                height=300, margin=dict(l=0, r=0, t=10, b=0),
+                template="plotly_dark",
+                yaxis_title="Phase (Radians)",
+                yaxis_range=[-np.pi, np.pi]
             )
+            st.plotly_chart(fig_pha, use_container_width=True)
+
+            # ── 3. Lead-Lag Audit Table (Clinical Attribution) ─────────────────
+            st.divider()
+            st.subheader("Cross-Spectral Signal Audit")
+            if summary:
+                audit_df = pd.DataFrame(summary)
+                # Formatting for the HUD
+                audit_df['Status'] = audit_df['lead_days'].apply(lambda x: "LEADING" if x > 0 else "LAGGING")
+                audit_df = audit_df[['period_days', 'avg_coherence', 'lead_days', 'Status']]
+                audit_df.columns = ['Period (Days)', 'Resonance Strength', 'Lead/Lag (Days)', 'Structural Status']
+                
+                st.table(audit_df.sort_values('Resonance Strength', ascending=False).head(8))
+                st.caption(f"Clinical Audit: Lead/Lag values represent a {first_sym} vs {second_sym} temporal offset. Positive = {first_sym} leads.")
+            else:
+                st.info("Insufficient spectral density for granular cycle attribution.")
+
+            # ── 4. Diagnostic Summary ──────────────────────────────────────────
+            st.divider()
+            c1, c2 = st.columns([2, 1])
+            with c1:
+                st.subheader("Spectral Power Distribution")
+                mean_res = np.mean(resonance_map, axis=1)
+                fig_bar = go.Figure()
+                fig_bar.add_trace(go.Scatter(x=periods, y=mean_res, fill='tozeroy', line=dict(color='#00ff41')))
+                fig_bar.update_layout(
+                    height=300, margin=dict(l=0, r=0, t=10, b=30),
+                    template="plotly_dark",
+                    font=dict(family="JetBrains Mono"),
+                    xaxis_title="Cycle Period (Days)",
+                    yaxis_title="Avg Coherence",
+                    xaxis_type="log" if "Logarithmic" in y_scale_type else "linear",
+                    xaxis=dict(gridcolor='#1a1d21'),
+                    yaxis=dict(gridcolor='#1a1d21')
+                )
+                st.plotly_chart(fig_bar, use_container_width=True)
+
+            with c2:
+                st.subheader("Statistical Inventory")
+                st.markdown(f"""
+                | Metric | Clinical Value |
+                |---|---|
+                | Aggregate Resonance | `{np.mean(resonance_map):.3f}` |
+                | Peak Resonant Node | `{np.max(resonance_map):.3f}` |
+                | Dominant Rhythm | `~{periods[np.argmax(mean_res)]:.1f} days` |
+                | Window Integrity | `{analysis_window} bars` |
+                | Nyquist Guard | `2.0 days` |
+                """)
+                
+                if np.mean(resonance_map) > 0.6:
+                    st.success("Target pair demonstrates Institutional Grade resonance stability.")
+                else:
+                    st.warning("Low resonance detected. Predictive lead/lag signals may be speculative.")
+
         else:
-            df = pd.DataFrame(summary)
-
-            # Build a clear lead/lag bar chart (positive = first leads, negative = second leads)
-            colors = [
-                "#00c853" if row["first_leads"] else "#ff1744"
-                for row in summary
-            ]
-            fig_ll = go.Figure(go.Bar(
-                x=[f"~{r['period_days']:.0f}d cycle" for r in summary],
-                y=[r["lead_days"] for r in summary],
-                marker_color=colors,
-                text=[
-                    f"{first_sym} leads by {abs(r['lead_days']):.1f}d"
-                    if r["first_leads"]
-                    else f"{second_sym} leads by {abs(r['lead_days']):.1f}d"
-                    for r in summary
-                ],
-                textposition="outside",
-            ))
-            fig_ll.add_hline(y=0, line_color="white", line_width=1)
-            fig_ll.update_layout(
-                title=f"Lead/Lag Days by Cycle Period  "
-                      f"(green = {first_sym} leads, red = {second_sym} leads)",
-                xaxis_title="Cycle Period",
-                yaxis_title="Lead Days (+ve = first asset leads)",
-                height=400,
-            )
-            st.plotly_chart(fig_ll, use_container_width=True)
-
-            # Actionable insight callout
-            best = max(summary, key=lambda r: r["avg_coherence"])
-            leader   = first_sym if best["first_leads"] else second_sym
-            follower = second_sym if best["first_leads"] else first_sym
-            lag_days = abs(best["lead_days"])
-            period   = best["period_days"]
-
-            st.success(
-                f"**Strongest signal** (coherence {best['avg_coherence']:.2f}): "
-                f"At the **~{period:.0f}-day cycle**, **{leader}** leads **{follower}** "
-                f"by approximately **{lag_days:.1f} days**. "
-                f"Recent moves in {leader} tend to be followed by similar moves "
-                f"in {follower} within that window at this frequency."
-            )
-
-            # Summary table
-            display_df = df.copy()
-            display_df["Leader"] = display_df.apply(
-                lambda r: f"{first_sym} (+{r['lead_days']:.1f}d)"
-                if r["first_leads"] else f"{second_sym} ({r['lead_days']:.1f}d)", axis=1
-            )
-            display_df = display_df[["period_days", "avg_coherence", "Leader"]].rename(columns={
-                "period_days":    "Cycle Period (days)",
-                "avg_coherence":  "Avg Coherence",
-            })
-            st.dataframe(display_df, hide_index=True, use_container_width=True)
-
-            st.caption(
-                "⚠️ The CWT is non-causal: phase estimates at time *t* incorporate "
-                "nearby future data. Treat this as a structural tendency, not a "
-                "precise real-time signal. Validate any strategy out-of-sample."
-            )
-
+            st.error("Insufficient historical overlap to conduct resonance analysis.")
     else:
-        st.error("We had trouble loading data for those specific symbols.")
+        st.error("Failed to acquire data for selected asset pair.")

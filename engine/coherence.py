@@ -9,11 +9,11 @@ def calculate_coherence(first_series, second_series, time_step=1.0, scale_resolu
     frequencies and points in time.
 
     Returns:
-        coherence_map  — (n_freqs × n_times), values in [0, 1]
-        phase_angle    — (n_freqs × n_times), radians; positive = first series leads
-        coi            — cone of influence (boundary reliability limit)
-        freqs          — frequency array (cycles per time_step unit)
-        sig            — significance mask (None when sig=False, kept for API compat)
+        coherence_map : (n_freqs x n_times), values in [0, 1]
+        phase_angle    : (n_freqs x n_times), radians; positive = first series leads
+        coi            : cone of influence (boundary reliability limit)
+        freqs          : frequency array (cycles per time_step unit)
+        sig            : significance mask (None when sig=False, kept for API compat)
 
     Phase convention:
         phase > 0  →  first_series leads second_series at that frequency/time
@@ -53,7 +53,7 @@ def compute_lead_lag_summary(phase_angle, freqs, coherence_map, coi,
 
     Typical use: pass first_sym returns as first_series and second_sym as second.
     If lead_days > 0 for the 20-day band, first_sym moves first at the monthly
-    cycle — use it as a leading indicator for second_sym.
+    cycle : use it as a leading indicator for second_sym.
     """
     n_freqs = len(freqs)
     rows = []
