@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+import streamlit.components.v1 as components
 from engine.data import manager
 from engine.decompose import slice_signal
 from engine.intelligence import analyze_stance, get_execution_playbook
@@ -17,14 +18,44 @@ inject_custom_css(st)
 st.title("Market DNA: Tactical Command Center")
 st.subheader("Institutional Signal Extraction & Spectral Intelligence Hub")
 
+# ── Sidebar Selection ────────────────────────────────────────────────────────
+st.sidebar.header("Command Controls")
+asset_options = ["SPY", "QQQ", "GLD", "TLT", "AAPL", "MSFT", "NVDA", "BTC-USD", "ETH-USD"]
+selected_assets = st.sidebar.multiselect(
+    "Core Asset Scan",
+    options=asset_options,
+    default=["SPY", "QQQ", "GLD", "BTC-USD"],
+    help="Select the institutional assets to include in the Master Signal Scan."
+)
+
+st.sidebar.divider()
+st.sidebar.markdown('**Market DNA: Alpha Synthesis**')
+st.sidebar.success("Institutional Integrity Verified")
+
+# ── Mermaid Helper ──────────────────────────────────────────────────────────
+def render_mermaid(code: str):
+    components.html(
+        f"""
+        <div class="mermaid">
+            {code}
+        </div>
+        <script type="module">
+            import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+            mermaid.initialize({{ startOnLoad: true, theme: 'dark' }});
+        </script>
+        """,
+        height=400,
+    )
+
 # ── Master Signal Scan (The HUD) ──────────────────────────────────────────────
 st.divider()
 st.subheader("Master Signal Scan: Global Regime Audit")
 
 @st.cache_data(ttl=1800)
-def scan_core_assets():
-    assets = ["SPY", "QQQ", "GLD", "BTC-USD"]
+def scan_core_assets(assets):
     scan_results = []
+    if not assets:
+        return []
     for asset in assets:
         data = manager.get_data(asset, period='1y')
         if data is not None:
@@ -37,22 +68,26 @@ def scan_core_assets():
                 "Asset": asset,
                 "Regime": regime,
                 "Sync Force": force,
-                "Bias": "BULLISH" if force > 0 else "BEARISH"
+                "Bias": "UP" if force > 0 else "DOWN"
             })
     return scan_results
 
-with st.spinner("Scanning global spectral regimes..."):
-    results = scan_core_assets()
+if selected_assets:
+    with st.spinner(f"Scanning {len(selected_assets)} spectral regimes..."):
+        results = scan_core_assets(selected_assets)
 
-if results:
-    cols = st.columns(len(results))
-    for i, res in enumerate(results):
-        with cols[i]:
-            st.markdown(f"**{res['Asset']}**")
-            st.metric(res['Regime'], f"{res['Sync Force']:.2f}", delta=res['Bias'])
-            st.caption("Structural Flow Status")
+    if results:
+        cols = st.columns(len(results))
+        for i, res in enumerate(results):
+            with cols[i]:
+                color = "#00ff41" if res['Bias'] == "UP" else "#ff4b4b"
+                st.markdown(f"**{res['Asset']}**")
+                st.metric(res['Regime'], f"{res['Sync Force']:.2f}", delta=res['Bias'], delta_color="normal")
+                st.caption("Structural Flow Status")
+    else:
+        st.error("Protocol Error: Global Scan Offline.")
 else:
-    st.error("Protocol Error: Global Scan Offline.")
+    st.info("Select assets in the sidebar to begin spectral scan.")
 
 st.divider()
 
@@ -69,7 +104,7 @@ with col_man:
         - **IF** Stance is 'Tactical Distribution', avoid long entries (The Bounce).
         """)
         
-    with st.expander("Step 02: Precedence (Coherence & Causality)"):
+    with st.expander("Analysis Step 02: Precedence (Coherence & Causality)"):
         st.write("""
         **Action**: Navigate to Coherence or Causality.
         **Goal**: Find a leader. Does SPY lead QQQ? Does BTC lead the S&P 500?
@@ -87,7 +122,7 @@ with col_man:
 
 with col_flow:
     st.markdown("### ⚙️ Signal Processing Pipeline")
-    st.mermaid("""
+    render_mermaid("""
     graph TD
         A[Raw Market Data] --> B[Multiresolution Analysis]
         B --> C{Decision Hub}
@@ -109,9 +144,4 @@ c1, c2, c3, c4 = st.columns(4)
 c1.metric("Intelligence Layer", "Active", "7 Engines")
 c2.metric("Tactical Manual", "V1.0 Certified", "IF/THEN Logic")
 c3.metric("Data Lake", manager.provider.__class__.__name__, "Pilot Scale")
-c4.metric("Clinical Standard", "Slate-Carbon", "Hackathon Final")
-
-st.sidebar.markdown('**Market DNA: Alpha Synthesis**')
-st.sidebar.success("Institutional Integrity Verified")
-st.sidebar.divider()
-st.sidebar.caption("Sovereign Alpha through Digital Signal Processing.")
+c4.metric("Clinical Standard", "Slate-Carbon", "Phase 37")
