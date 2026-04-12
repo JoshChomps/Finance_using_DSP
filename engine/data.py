@@ -80,9 +80,6 @@ class DataManager:
         # 3. Default to Yahoo (Tier 1)
         return YahooProvider()
 
-        # 3. Default to Yahoo (Tier 1)
-        return YahooProvider()
-
     @lru_cache(maxsize=32)
     def get_data(self, symbol, period='5y', interval='1d', use_cache=True):
         if not os.path.exists(CACHE_FOLDER):

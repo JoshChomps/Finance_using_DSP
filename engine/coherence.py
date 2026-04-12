@@ -22,11 +22,6 @@ def calculate_coherence(first_series, second_series, time_step=1.0, scale_resolu
     """
     standard_wave = wavelet.Morlet()
 
-    wavelet.xwt(
-        first_series, second_series, time_step,
-        dj=scale_resolution, wavelet=standard_wave,
-    )
-
     coherence_map, phase_angle, coi, freqs, sig = wavelet.wct(
         first_series, second_series, time_step,
         dj=scale_resolution, wavelet=standard_wave, sig=False,

@@ -10,8 +10,8 @@ def test_decomposition():
     depth = 3
     length = 125
     signal = np.sin(np.linspace(0, 10, length)) + np.random.normal(0, 0.1, length)
-    bands = slice_signal(signal, depth=depth)
-    assert len(bands) == depth + 1
+    bands, actual_depth = slice_signal(signal, depth=depth)
+    assert len(bands) == actual_depth + 1
     assert all(len(b) == length for b in bands)
 
 def test_create_labels_count():

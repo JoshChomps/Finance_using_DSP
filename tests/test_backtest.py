@@ -21,7 +21,7 @@ def test_run_backtest_basic():
     assert np.isclose(results["daily_returns"][2], 0.01)
     assert results["win_rate"] >= 0.0
     assert "final_profit" in results
-    assert "position_size" in results
+    assert "sharpe" in results
 
 
 def test_run_backtest_position_size():

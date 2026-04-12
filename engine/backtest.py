@@ -44,8 +44,8 @@ def run_backtest(returns, signals, slippage=0.0005, position_size=1.0):
         downside_deviation = np.sqrt(downside_var) * np.sqrt(252)
         sortino = annual_growth / max(1e-9, downside_deviation)
     else:
-        # Zero-loss scenario (Theoretical maximum efficiency)
-        sortino = annual_growth / 1e-9
+        # Zero-loss scenario: sortino is undefined; use sharpe as a reasonable proxy
+        sortino = sharpe
 
     # Risk Attribution: Calmar (Drawdown Efficiency)
     peak = np.maximum.accumulate(1 + profit_path)
