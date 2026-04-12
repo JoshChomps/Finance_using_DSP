@@ -1,3 +1,13 @@
+---
+title: Market DNA Engine
+emoji: 📊
+colorFrom: blue
+colorTo: indigo
+sdk: streamlit
+app_file: 0_Home.py
+pinned: false
+---
+
 # Market DNA Engine
 ### Institutional Digital Signal Processing for Non-Lagging Alpha Extraction
 
