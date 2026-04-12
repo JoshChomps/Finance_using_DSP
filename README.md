@@ -1,85 +1,65 @@
----
-title: Market DNA Engine
-emoji: 📊
-colorFrom: gray
-colorTo: green
-sdk: streamlit
-app_file: 0_Home.py
-pinned: false
-license: mit
----
-
 # Market DNA Engine
-### Institutional Digital Signal Processing for Technical Alpha
+### Institutional Digital Signal Processing for Non-Lagging Alpha Extraction
 
-The Market DNA Engine utilizes Digital Signal Processing (DSP) to decompose market volatility into specific frequency components. This separates algorithmic noise from structural macro trends.
-
----
-
-## Core Methodology: Signal Extraction
-Linear indicators inherit phase lag. The Market DNA Engine utilizes Orthogonal Wavelet Decomposition and Synchrosqueezing to isolate market cycles without phase shift. This allows for the identification of structural support and resistance prior to manifestation in lagging technical indicators.
+The Market DNA Engine is a professional-grade strategy analysis platform that utilizes Digital Signal Processing (DSP) to decompose market price action into orthogonal frequency components. This architecture separates structural macro trends from stochastic algorithmic noise, providing a non-lagging foundation for institutional decision-making.
 
 ---
 
-### Core Analytical Modules
+## Live Demo
 
-1. **Spectral Decomposition**: Orthogonal signal extraction via Multiresolution Analysis (MRA).
-2. **Cross-Spectral Coherence**: Statistical resonance tracking for identifying leading market indicators.
-3. **Directional Causality**: Evaluation of spectral precedence via lead-lag phase estimation.
-4. **Institutional Backtesting**: Performance simulation with lead-adjusted execution, Kelly Criterion allocation, and risk metrics (Sharpe, Sortino, Calmar, Profit Factor).
-5. **Resonance Guardian**: Real-time portfolio monitoring to detect frequency-domain instability.
+### 1. Problem Identification
+Traditional technical indicators (Moving Averages, RSI, MACD) are fundamentally reactive. They rely on lookback windows that introduce **phase lag**-the delay between a market event and the indicator's signal. In modern high-frequency regimes, this delay leads to "whipsaw" entries and delayed exits, eroding alpha. Furthermore, raw price data is "noisy," combining long-term value shifts with short-term liquidity distortions.
 
----
+### 2. Innovative Approach
+Market DNA solves the lag problem by shifting analysis from the Time Domain to the **Frequency Domain**. By using **Orthogonal Wavelet Decomposition (MRA)** and **Synchrosqueezing**, the engine extracts specific "Market Rhythms" (cycles) without the temporal distortion inherent in traditional filters. This allows traders to identify structural support and cyclical exhaustion *before* they manifest in lagging indicators.
 
-## Integrated Modules
+### 3. Technical Implementation
+- **Signal Extraction**: Multiresolution Analysis (MRA) using Daubechies (db4) and Symlets (sym8) wavelets.
+- **Resonance Tracking**: Cross-Wavelet Coherence (CWT) for tracking leading/lagging relationships between assets (e.g., BTC as a leading indicator for SPY).
+- **Causal Inference**: Vector Autoregression (VAR) based Spectral Granger Causality to identify directional information flow.
+- **Risk Management**: Integrated Backtesting suite with Kelly Criterion capital allocation and OOS (Out-of-Sample) validation.
 
-### 1. Price Decomposition
-Extraction of price action into fundamental structural bands:
-- **Structural Trend (Macro)**: Underlying economic direction.
-- **Cycle Momentum (Intermediate)**: Swing waves.
-- **Micro-Volatility (Intraday)**: High-frequency algorithmic noise.
-- **Validation**: Includes Math Integrity Proof (99.9%+ reconstruction accuracy).
+### 4. Usability and User Experience
+The platform features a high-fidelity **Slate-Carbon Tactical HUD**, designed for high-density information display. It provides clinical "Execution Playbooks" that translate complex DSP waveforms into actionable 1-2-3 trading instructions.
 
-### 2. Spectral Resonance
-Measures frequency-domain cross-correlation. Identify systemic risk when distinct assets exhibit shared macro-frequency resonance.
-
-### 3. Spectral Causality
-Directional leadership detection using Spectral Granger Causality. Uncover hidden leadership between assets at specific time scales.
+### 5. Scalability and Feasibility
+The engine is built on a modular data-agnostic layer. It defaults to public Yahoo Finance data for accessibility but is fully bridged for institutional APIs (Alpaca, Polygon, Interactive Brokers). The DSP logic is optimized via NumPy/SciPy for sub-second analysis on standard commodity hardware.
 
 ---
 
-## Deployment
+## Technologies Used
+- **Language**: Python 3.10+
+- **Frontend**: Streamlit (Framework), Vanilla CSS (Custom HUD)
+- **DSP Core**: PyWavelets, ssqueezepy, pycwt
+- **Analysis**: Statsmodels, Pandas, NumPy
+- **Visualization**: Plotly (Interactive Spectral Charts)
+- **Deployment**: Hugging Face Spaces, GitHub Actions
 
-### Local Environment
-1. **Setup**:
-   ```powershell
-   python -m venv .venv
-   .venv\Scripts\activate
+---
+
+## Setup Instructions
+
+1. **Clone the Repository**:
+   ```bash
+   git clone https://github.com/JoshChomps/Finance_using_DSP.git
+   cd Finance_using_DSP
+   ```
+
+2. **Install Dependencies**:
+   ```bash
    pip install -r requirements.txt
    ```
 
-2. **Initialize Cache**:
-   ```powershell
-   python cache_data.py
-   ```
-
-3. **Execution**:
-   ```powershell
+3. **Run Locally**:
+   ```bash
    streamlit run 0_Home.py
    ```
 
-### API Integration
-The engine is accessible via FastAPI for external integration.
-**[http://localhost:8000/docs](http://localhost:8000/docs)**
-
 ---
 
-## Architecture
-- **Processing**: PyWavelets (DWT), ssqueezepy (Synchrosqueezing), pycwt (Coherence).
-- **Inference**: Statsmodels (VAR-based Causality).
-- **Interface**: Streamlit Institutional Slate Theme.
-- **Backend**: FastAPI.
+## Team Details
+- **Josh Chomiak**: Lead Engineer & Quantitative Architect
+  - Contribution: End-to-end development of the DSP engine, HUD interface, and backtesting framework.
 
 ---
-### AlgoFest 2026 Submission
-*Market DNA Engine: Alpha through Signal Processing.*
+**Institutional Standard | Algofest 2026 | Systematic Alpha.**

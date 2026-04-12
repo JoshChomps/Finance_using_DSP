@@ -61,7 +61,7 @@ def test_compute_kelly_fraction_no_edge():
 
 
 def test_compute_kelly_fraction_insufficient_data():
-    """Too few active bars → return 0.0 (don't trade)."""
+    """Too few active bars -> return 0.0 (don't trade)."""
     returns = np.zeros(10)
     signals = np.ones(10)
     kelly = compute_kelly_fraction(returns, signals)
@@ -94,7 +94,7 @@ def test_create_phase_signals_no_signal_when_phase_positive():
     """When phase is positive (traded asset leads), no signals should be generated."""
     n = 100
     coherence_grid = np.full((5, n), 0.8)   # high coherence always
-    phase_grid     = np.full((5, n), 0.5)   # positive phase: traded leads source → no edge
+    phase_grid     = np.full((5, n), 0.5)   # positive phase: traded leads source -> no edge
     source_returns = np.ones(n) * 0.01
 
     signals = create_phase_signals(

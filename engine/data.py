@@ -5,7 +5,7 @@ import streamlit as st
 from datetime import datetime
 from functools import lru_cache
 
-# ── Scalable Data Architecture Config ──────────────────────────────────────────
+# == Scalable Data Architecture Config ==========================================
 DEFAULT_CACHE = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data', 'cache')
 CACHE_FOLDER = os.getenv('FIN_DATA_CACHE', DEFAULT_CACHE)
 
@@ -53,7 +53,7 @@ class PolygonProvider(DataProvider):
         return YahooProvider().fetch_history(symbol, period, interval) # Fallback
 
 class DataManager:
-    """The central authority for sovereign data lake management."""
+    """The central authority for data management."""
     def __init__(self):
         self.provider = self._initialize_provider()
     

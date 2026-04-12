@@ -13,7 +13,7 @@ inject_custom_css(st)
 
 st.title("Portfolio Resonance Matrix")
 
-# ── Sidebar ────────────────────────────────────────────────────────────────────
+# == Sidebar ====================================================================
 st.sidebar.header("Portfolio Construction")
 default_tickers = ["SPY", "QQQ", "GLD", "TLT", "AAPL", "MSFT", "NVDA", "BTC-USD", "TSLA"]
 tickers = st.sidebar.multiselect(
@@ -37,7 +37,7 @@ def load_portfolio_data(ticker_list, horizon):
             portfolio[ticker] = z_score_normalize(ret).values
     return portfolio
 
-# ── Load and Prep ──────────────────────────────────────────────────────────────
+# == Load and Prep ==============================================================
 if len(tickers) < 2:
     st.info("Selection required: At least two assets for resonance mapping.")
 else:
@@ -69,7 +69,7 @@ else:
         avg_resonance = np.mean(matrix[np.triu_indices(n, k=1)])
         regime, sync_force, description = analyze_portfolio(avg_resonance)
 
-        # ── 0. Strategy Analysis Matrix ──────────────────────────────
+        # == 0. Strategy Analysis Matrix ==============================
         st.subheader("Strategy Analysis Matrix")
         with st.expander("Primary Portfolio Intelligence", expanded=True):
             col1, col2 = st.columns([1, 2])
@@ -93,7 +93,7 @@ else:
                 
                 st.markdown(f"**Diversification Efficiency**: {max(0, min(100, 100 * (1 - avg_resonance))):.1f}%")
 
-        # ── 1. Portfolio Construction Stats ─────────────────────────────────────────
+        # == 1. Portfolio Construction Stats =========================================
         m1, m2, m3 = st.columns(3)
         with m1:
             st.metric("Mean Resonance", f"{avg_resonance:.4f}")
@@ -103,7 +103,7 @@ else:
         with m3:
             st.metric("Efficiency", f"{max(0, min(100, 100 * (1 - avg_resonance))):.1f}%")
 
-        # ── 1. Resonance Topology ──────────────────────────────────────────────
+        # == 1. Resonance Topology ==============================================
         st.divider()
         col_map, col_rep = st.columns([1.8, 1])
         
@@ -157,7 +157,7 @@ else:
             else:
                 st.success("Stable state confirmed.")
 
-        # ── 2. Focused Pair Deep-Dive ──────────────────────────────────────────
+        # == 2. Focused Pair Deep-Dive ==========================================
         st.divider()
         st.subheader("Focused Spectral Investigation")
         
@@ -197,6 +197,6 @@ else:
             )
             st.plotly_chart(fig_detail, use_container_width=True)
             
-            st.caption(f"Clinical Audit: Resonance between {pair1} and {pair2} is currently concentrated at the structural frequencies. Consult the Bivariate Guardian for phase-lead attribution.")
+            st.caption(f"Audit Verification: Resonance between {pair1} and {pair2} is currently concentrated at the structural frequencies. Consult the resonance analytics for phase-lead attribution.")
 
 st.sidebar.caption("Institutional-grade Alpha through Digital Signal Processing.")

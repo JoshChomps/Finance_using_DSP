@@ -17,7 +17,7 @@ with st.expander("Institutional Glossary | MRA Methodology", expanded=False):
     **Prerequisites for Alpha Extraction**:
     - **MRA (Multiresolution Analysis)**: The decomposition of a signal into orthogonal frequency bands. Each band represents a specific 'Market Rhythm'.
     - **Structural Trend**: The underlying macro bias (Approximation). It filters out all stochastic noise to find the path of least resistance.
-    - **Price Vector (Projection)**: A first-order structural extrapolation. It identifies where the core trend ('DNA') is pointing over a 14-day horizon.
+    - **Price Vector (Projection)**: A first-order structural extrapolation. It identifies where the core trend is pointing over a 14-day horizon.
     - **Dominant Cycle**: The frequency band currently containing the highest signal energy (variance). This is the 'heartbeat' of current price volatility.
     - **Accumulation**: A regime where the Structural Trend is positive, but intermediate cycles are corrective (The Dip). Historically an institutional buying zone.
     """)
@@ -40,12 +40,12 @@ if data is not None:
     prices = data["Close"].values
     dates  = data.index
     
-    with st.spinner("Extracting Spectral DNA..."):
+    with st.spinner("Extracting Signal Components..."):
         # Correct return: bands (list), actual_depth (int)
         bands, actual_depth = slice_signal(prices, wavelet=wavelet_name, depth=depth)
         
         # PyWavelets MRA returns: [Approximation, Detail_J, Detail_J-1, ..., Detail_1]
-        # Approximation is the Structural Trend (Macro)
+        # Approximation is the Structural Baseline (Macro)
         # Detail_1 is the highest frequency noise (Micro)
         
         # Calculate Energy Share for Dominant Cycle Detection 
@@ -67,7 +67,6 @@ if data is not None:
     # Align projection dates with future timeframe
     future_dates = pd.date_range(start=dates[-1], periods=15, freq=data.index.freq or 'D')[1:]
 
-    # ── Top-Level Intelligence Dashboard ──────────────────────────────────────
     col1, col2 = st.columns([2, 1])
     
     with col1:
@@ -122,7 +121,7 @@ if data is not None:
         with col_tx:
             # Semantic Logic Generation
             is_bullish = score > 0
-            logic_mode = "Clinical Aggression" if abs(score) > 0.3 else "Tactical Observation"
+            logic_mode = "Aggressive Strategy" if abs(score) > 0.3 else "Tactical Observation"
             
             st.markdown(f"""
             **Analysis Methodology**:
@@ -195,8 +194,7 @@ if data is not None:
         - **Harmonic Layer**: Centered-on-zero rhythmic cycles representing harmonic volatility.
         """)
 
-    # 2A. Structural DNA View (Trend + Forecast)
-    st.markdown("#### Layer 1: Structural DNA (Baseline)")
+    # Layer 1: Structural Baseline (Baseline)
     fig_struct = go.Figure()
     
     # 1. Raw Price (Translucent)
@@ -270,9 +268,9 @@ if data is not None:
 
     fig_proj = go.Figure()
     fig_proj.add_trace(go.Scatter(x=dates, y=prices, name="Actual Price", line=dict(color="rgba(255,255,255,0.4)")))
-    fig_proj.add_trace(go.Scatter(x=future_dates, y=vector, name="Projected Structural DNA", 
+    fig_proj.add_trace(go.Scatter(x=future_dates, y=vector, name="Projected Structural Baseline", 
                                 line=dict(color="#00ff41", width=3, dash="dot"),
-                                hovertemplate='<b>Projected Structural DNA</b><br>Date: %{x}<br>Val: %{y:.2f}<extra></extra>'))
+                                hovertemplate='<b>Projected Structural Baseline</b><br>Date: %{x}<br>Val: %{y:.2f}<extra></extra>'))
     
     fig_proj.update_layout(
         title=f"Structural DNA Projection: {symbol}",
@@ -286,13 +284,18 @@ if data is not None:
 
     # 4. Cycle Energy Distribution
     st.subheader("Spectral Energy Distribution")
+    
+    # Filter out local drift/trend to highlight cyclical energy variances
+    cycle_names = band_names[1:]
+    cycle_energy = band_energy[1:]
+    
     fig_eng = go.Figure(go.Bar(
-        x=band_names, y=band_energy,
+        x=cycle_names, y=cycle_energy,
         marker_color="#00ff41",
-        hovertemplate='<b>Band:</b> %{x}<br><b>Energy Share (Var):</b> %{y:.4f}<extra></extra>'
+        hovertemplate='<b>Cycle:</b> %{x}<br><b>Energy Share (Var):</b> %{y:.4f}<extra></extra>'
     ))
     fig_eng.update_layout(
-        title="Energy Concentration across Decomposed Layers",
+        title="Cycle Energy Concentration (Excl. Structural Trend)",
         height=300, margin=dict(l=0, r=0, t=40, b=0),
         template="plotly_dark",
         font=dict(family="JetBrains Mono"),

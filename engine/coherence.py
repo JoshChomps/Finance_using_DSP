@@ -16,9 +16,9 @@ def calculate_coherence(first_series, second_series, time_step=1.0, scale_resolu
         sig            : significance mask (None when sig=False, kept for API compat)
 
     Phase convention:
-        phase > 0  →  first_series leads second_series at that frequency/time
-        phase < 0  →  second_series leads first_series
-        |lead in days| = |phase| / (2π × freq)
+        phase > 0  leads  first_series leads second_series at that frequency/time
+        phase < 0  leads  second_series leads first_series
+        |lead in days| = |phase| / (2*pi * freq)
     """
     standard_wave = wavelet.Morlet()
 

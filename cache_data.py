@@ -1,5 +1,5 @@
 """
-cache_data.py — Pre-downloads market data for every symbol used in the dashboard.
+cache_data.py - Pre-downloads market data for every symbol used in the dashboard.
 
 Run this once before launching the app so every page loads instantly:
     python cache_data.py

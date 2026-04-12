@@ -13,7 +13,7 @@ inject_custom_css(st)
 
 st.title("Portfolio Resonance Guardian")
 
-# ── Sidebar ────────────────────────────────────────────────────────────────────
+# == Sidebar ====================================================================
 st.sidebar.header("Asset Comparison")
 first_sym  = st.sidebar.selectbox("Primary Asset", ["SPY", "QQQ", "GLD", "TLT", "AAPL", "MSFT", "NVDA", "BTC-USD"], index=0)
 second_sym = st.sidebar.selectbox("Compare Against", ["SPY", "QQQ", "GLD", "TLT", "AAPL", "MSFT", "NVDA", "BTC-USD"], index=1)
@@ -24,7 +24,7 @@ analysis_window = st.sidebar.slider("Analysis Window (Days)", 250, 2000, 750,
                                      help="The lookback period for wavelet coherence calculation.")
 y_scale_type = st.sidebar.radio("Spectral Resolution", ["Logarithmic (Classic)", "Linear (Structural)"], index=0)
 
-# ── Load and Prep ──────────────────────────────────────────────────────────────
+# == Load and Prep ==============================================================
 if first_sym == second_sym:
     st.error("Select distinct assets for resonance analysis.")
 else:
@@ -46,13 +46,13 @@ else:
                 series2 = norm2.tail(analysis_window).values
                 resonance_map, phase_map, coi, freqs, sig = calculate_coherence(series1, series2)
                 
-                # Clinical Lead/Lag Attribution
+                # Lead/Lag Attribution
                 summary = compute_lead_lag_summary(phase_map, freqs, resonance_map, coi)
                 regime, avg_coh, description = analyze_resonance(summary)
 
             periods = np.array([1.0 / f if f > 0 else 1000 for f in freqs])
             
-            # ── 0. Strategy Analysis Matrix ──────────────────────────
+            # == 0. Strategy Analysis Matrix ==========================
             st.subheader("Strategy Analysis Matrix")
             with st.expander("Primary Resonance Intelligence", expanded=True):
                 col1, col2 = st.columns([1, 2])
@@ -79,7 +79,7 @@ else:
                     for step in playbook:
                         st.write(step)
 
-            # ── 1. Coherence Heatmap (Wavelet Intensity) ───────────────────────
+            # == 1. Coherence Heatmap (Wavelet Intensity) =======================
             st.subheader(f"Cross-Spectral Coherence: {first_sym} vs {second_sym}")
             fig_heat = go.Figure()
 
@@ -123,7 +123,7 @@ else:
             )
             st.plotly_chart(fig_heat, use_container_width=True)
 
-            # ── 2. Cross-Spectral Phase (Lead/Lag Topology) ────────────────────
+            # == 2. Cross-Spectral Phase (Lead/Lag Topology) ====================
             st.subheader("Cross-Spectral Phase Topology")
             with st.expander("Interpretation Guide: Phase Angle", expanded=False):
                 st.markdown("""
@@ -148,7 +148,7 @@ else:
             )
             st.plotly_chart(fig_pha, use_container_width=True)
 
-            # ── 3. Lead-Lag Audit Table (Clinical Attribution) ─────────────────
+            # == 3. Lead-Lag Audit Table (Detailed Attribution) =================
             st.divider()
             st.subheader("Cross-Spectral Signal Audit")
             if summary:
@@ -159,11 +159,11 @@ else:
                 audit_df.columns = ['Period (Days)', 'Resonance Strength', 'Lead/Lag (Days)', 'Structural Status']
                 
                 st.table(audit_df.sort_values('Resonance Strength', ascending=False).head(8))
-                st.caption(f"Clinical Audit: Lead/Lag values represent a {first_sym} vs {second_sym} temporal offset. Positive = {first_sym} leads.")
+                st.caption(f"Audit Verification: Lead/Lag values represent a {first_sym} vs {second_sym} temporal offset. Positive = {first_sym} leads.")
             else:
                 st.info("Insufficient spectral density for granular cycle attribution.")
 
-            # ── 4. Diagnostic Summary ──────────────────────────────────────────
+            # == 4. Diagnostic Summary ==========================================
             st.divider()
             c1, c2 = st.columns([2, 1])
             with c1:
@@ -186,7 +186,7 @@ else:
             with c2:
                 st.subheader("Statistical Inventory")
                 st.markdown(f"""
-                | Metric | Clinical Value |
+                | Metric | Value |
                 |---|---|
                 | Aggregate Resonance | `{np.mean(resonance_map):.3f}` |
                 | Peak Resonant Node | `{np.max(resonance_map):.3f}` |

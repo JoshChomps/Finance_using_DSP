@@ -1,4 +1,4 @@
-import streamlit as st # [RELOAD_TRIGGER_V30]
+import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
@@ -21,7 +21,7 @@ inject_custom_css(st)
 
 st.title("Backtesting Simulator")
 
-# ── Sidebar ────────────────────────────────────────────────────────────────────
+# == Sidebar ====================================================================
 st.sidebar.header("Asset Selection")
 traded_asset  = st.sidebar.selectbox("Traded Asset", ["SPY", "QQQ", "GLD", "TLT", "AAPL", "BTC-USD"], index=0)
 signal_source = st.sidebar.selectbox("Signal Source (Lead/Lag)", ["SPY", "QQQ", "GLD", "TLT", "AAPL", "BTC-USD"], index=2)
@@ -30,11 +30,11 @@ st.sidebar.divider()
 st.sidebar.header("Strategy Configuration")
 signal_mode = st.sidebar.radio(
     "Signal Generation",
-    ["Phase-Following (Clinical)", "Coherence Mean-Reversion"],
+    ["Phase-Following (Quantitative)", "Coherence Mean-Reversion"],
     help="Phase-Following uses the wavelet lead/lag offset to determine direction. Mean-Reversion bets on decoupling."
 )
 
-if signal_mode == "Phase-Following (Clinical)":
+if signal_mode == "Phase-Following (Quantitative)":
     coh_threshold    = st.sidebar.slider("Resonance Threshold", 0.4, 0.9, 0.6)
     phase_strength   = st.sidebar.slider("Min Phase Lead (rad)", 0.05, 1.0, 0.15)
     phase_smoothing  = st.sidebar.slider("Phase Smoothing (days)", 3, 20, 5)
@@ -62,10 +62,10 @@ st.sidebar.markdown("""
 **Risk Attribution Logic**:
 - **T+1 Execution**: Ensures signals generated at Close(t) are executed at Open(t+1) to prevent look-ahead bias.
 - **Sortino Ratio**: Standard Deviation of *downside* variance only.
-- **Kelly Fraction**: Optimal capital allocation based on the reward-to-risk (mu/sigma²) manifold.
+- **Kelly Fraction**: Optimal capital allocation based on the reward-to-risk (mu/sigma^2) manifold.
 """)
 
-# ── Load and Prep ──────────────────────────────────────────────────────────────
+# == Load and Prep ==============================================================
 if traded_asset == signal_source:
     st.error("Select distinct assets for lead/lag analysis.")
 else:
@@ -126,17 +126,17 @@ else:
         # Position Sizing
         pos_size = compute_kelly_fraction(actual_rets, signals) if "Kelly" in sizing_mode else manual_size
         
-        # ── Execution Logic ────────────────────────────────────────────────────
+        # == Execution Logic ====================================================
         oos_start = int(len(actual_rets) * (1 - oos_pct / 100))
         
         # Results calculation
         results_full = run_backtest(actual_rets, signals, slippage=fee_perc, position_size=pos_size)
         results_oos  = run_backtest(actual_rets[oos_start:], signals[oos_start:], slippage=fee_perc, position_size=pos_size)
         
-        # Actionable Performance Intelligence
+        # Strategy Performance Summary
         regime, val_score, description = analyze_backtest(results_full, results_oos)
 
-        # ── 0. Strategy Analysis Matrix ──────────────────────────
+        # == 0. Strategy Analysis Matrix ==========================
         st.subheader("Strategy Analysis Matrix")
         with st.expander("Primary Strategy Intelligence", expanded=True):
             col1, col2 = st.columns([1, 2])
@@ -163,7 +163,7 @@ else:
                 elif results_full['total_trades'] < 5:
                     st.info("Sample Size Warning: Strategy expectancy is speculative due to low transaction density.")
 
-        # ── 1. Tactical Strategy Audit ──────────────────────────────────────
+        # == 1. Tactical Strategy Audit ======================================
         st.divider()
         st.subheader("Strategy Audit: Lead/Lag Validation")
         
@@ -185,9 +185,9 @@ else:
             ]
         }
         st.table(pd.DataFrame(audit_data))
-        st.caption(f"Clinical Audit: OOS Anchor point established at bar {oos_start} ({oos_pct}% held-out).")
+        st.caption(f"OOS Validation: OOS Anchor point established at bar {oos_start} ({oos_pct}% held-out).")
 
-        # ── 2. Integrated Performance Dashboard ───────────────────────────────
+        # == 2. Integrated Performance Dashboard ===============================
         st.divider()
         st.subheader("Integrated Performance Dashboard")
         
@@ -217,7 +217,7 @@ else:
         if results_oos['sharpe'] < 0.2:
             st.warning("Validation Divergence: Low Out-of-Sample metrics suggest potential overfitting at this frequency band.")
 
-        # ── Equity and Drawdown Visualization ────────────────────────────────
+        # == Equity and Drawdown Visualization ================================
         st.divider()
         col_main, col_side = st.columns([3, 1])
         
@@ -285,7 +285,7 @@ else:
         )
         st.plotly_chart(fig_dd, use_container_width=True)
 
-        # ── Signal Diagnostics ───────────────────────────────────────────────
+        # == Signal Diagnostics ===============================================
         st.divider()
         st.subheader("Signal Logic Transparency")
         
@@ -330,7 +330,7 @@ else:
             st.plotly_chart(fig_pha, use_container_width=True)
 
         st.caption(
-            "⚠️ The CWT is non-causal: metrics include lookahead leakage in the in-sample period. "
+            "Note: The CWT is non-causal: metrics include lookahead leakage in the in-sample period. "
             "Validate all strategies using the Out-of-Sample (OOS) highlight above for live-tracking expectancy."
         )
 

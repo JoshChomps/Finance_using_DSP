@@ -237,10 +237,9 @@ def analyze_portfolio(avg_resonance):
         desc = "Portfolio resonance is within institutional bounds. Reasonable balance between coordination and independence."
         
     return regime, force_score, desc
-
 def get_execution_playbook(module, regime):
     """
-    Provides clinical 1-2-3 step instructions based on the detected regime.
+    Provides tactical instructions based on the detected regime.
     """
     playbooks = {
         "Decomposition": {

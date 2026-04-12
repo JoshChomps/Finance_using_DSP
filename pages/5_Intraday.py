@@ -13,7 +13,7 @@ inject_custom_css(st)
 
 st.title("Intraday Spectral Flow")
 
-# ── Sidebar ────────────────────────────────────────────────────────────────────
+# == Sidebar ====================================================================
 st.sidebar.header("Real-Time Acquisition")
 stock     = st.sidebar.selectbox("Intraday Symbol", ["NVDA", "AAPL", "MSFT", "TSLA", "AMD", "SPY", "QQQ", "BTC-USD"], index=0)
 timeframe = st.sidebar.selectbox("Aggregation Window", ["1m", "5m", "15m"], index=0)
@@ -22,7 +22,7 @@ st.sidebar.divider()
 st.sidebar.header("Processing Parameters")
 stft_window = st.sidebar.slider("STFT Segment Length", 32, 256, 64, help="Spectral resolution vs temporal precision trade-off.")
 
-# ── Load and Prep ──────────────────────────────────────────────────────────────
+# == Load and Prep ==============================================================
 @st.cache_data(ttl=60)
 def get_intraday_data(symbol, interval):
     try:
@@ -45,7 +45,7 @@ if data is not None:
     std_p  = np.std(close_prices)
     norm_p = (close_prices - mean_p) / (std_p if std_p > 0 else 1.0)
 
-    # ── 2. STFT Scalogram ──────────────────────────────────────────────────────
+    # == 2. STFT Scalogram ======================================================
     with st.spinner("Calculating frequency flow:"):
         freqs, times, map_z = track_frequency_flow(norm_p, window_size=stft_window)
         intensity = get_magnitude(map_z)
@@ -63,7 +63,7 @@ if data is not None:
         
         regime, pulse_force, description = analyze_intraday(compression, dom_rhythm)
 
-    # ── 0. Strategy Analysis Matrix ──────────────────────────────
+    # == 0. Strategy Analysis Matrix ==============================
     st.subheader("Strategy Analysis Matrix")
     with st.expander("Primary Intraday Intelligence", expanded=True):
         col1, col2 = st.columns([1, 2])
@@ -86,7 +86,7 @@ if data is not None:
             for step in playbook:
                 st.write(step)
 
-    # ── 1. Price Momentum ──────────────────────────────────────────────────────
+    # == 1. Price Momentum ======================================================
     st.subheader(f"Price Vector: {stock} ({timeframe})")
     fig_price = go.Figure()
     fig_price.add_trace(go.Scatter(x=dates, y=close_prices, name="Exec Price", line=dict(color='#4fa3e0', width=2)))
@@ -100,7 +100,7 @@ if data is not None:
     )
     st.plotly_chart(fig_price, use_container_width=True)
 
-    # ── 2. STFT Scalogram ──────────────────────────────────────────────────────
+    # == 2. STFT Scalogram ======================================================
     st.divider()
     st.subheader("Short-Time Frequency Topology")
     
@@ -136,7 +136,7 @@ if data is not None:
     )
     st.plotly_chart(fig_stft, use_container_width=True)
 
-    # ── 3. Heartbeat Audit Table (Cycle Attribution) ───────────────────────
+    # == 3. Heartbeat Audit Table (Cycle Attribution) =======================
     st.divider()
     st.subheader("Spectral Heartbeat Audit")
     
@@ -154,9 +154,9 @@ if data is not None:
             "Status": "ACTIVE" if pwr > energy_mean * 2 else "STOCHASTIC"
         })
     st.table(pd.DataFrame(audit_data))
-    st.caption("Clinical Audit: Heartbeat values represent localized temporal resonance in the intraday price vector.")
+    st.caption("Audit Verification: Heartbeat values represent localized temporal resonance in the intraday price vector.")
 
-    # ── 4. Diagnostic Attribution (Technical) ──────────────────────────────
+    # == 4. Diagnostic Attribution (Technical) ==============================
     st.divider()
     c1, c2 = st.columns([2, 1])
     with c1:
@@ -177,7 +177,7 @@ if data is not None:
     with c2:
         st.subheader("Technical Matrix")
         st.markdown(f"""
-        | Metric | Clinical Value |
+        | Metric | Value |
         |---|---|
         | Peak Heartbeat | `~{dom_rhythm:.1f} min` |
         | Energy Compression | `{compression:.2f}x` |

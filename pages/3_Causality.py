@@ -13,7 +13,7 @@ inject_custom_css(st)
 
 st.title("Spectral Causality Matrix")
 
-# ── Sidebar ────────────────────────────────────────────────────────────────────
+# == Sidebar ====================================================================
 st.sidebar.header("Variable Interaction")
 cand_sym   = st.sidebar.selectbox("Predictor Asset (Source)", ["SPY", "QQQ", "GLD", "TLT", "AAPL", "MSFT", "BTC-USD"], index=2) 
 target_sym = st.sidebar.selectbox("Response Asset (Sink)",    ["SPY", "QQQ", "GLD", "TLT", "AAPL", "MSFT", "BTC-USD"], index=0) 
@@ -30,7 +30,7 @@ Quantifies the reduction in frequency-domain variance of Asset A afforded by the
 - **Causal Power**: Strength of Information Transfer.
 """)
 
-# ── Load and Prep ──────────────────────────────────────────────────────────────
+# == Load and Prep ==============================================================
 if cand_sym == target_sym:
     st.error("Identification required: Select distinct source and sink assets.")
 else:
@@ -45,13 +45,13 @@ else:
         combined = pd.concat([rets1, rets2], axis=1).dropna()
         combined.columns = [cand_sym, target_sym]
         
-        st.subheader(f"Direct Information Transfer: {cand_sym} → {target_sym}")
+        st.subheader(f"Direct Information Transfer: {cand_sym} -> {target_sym}")
         
         with st.spinner("Decomposing causal vectors:"):
             input_data = combined.tail(1000).values
             freq_bins, flow_y_to_x, flow_x_to_y = analyze_causal_flow(input_data, maxlag=max_lags)
 
-        # ── 0. Strategy Analysis Matrix ──────────────────────────
+        # == 0. Strategy Analysis Matrix ==========================
         st.subheader("Strategy Analysis Matrix")
         
         # Define flow metrics BEFORE the decoder
@@ -90,7 +90,7 @@ else:
 
         st.divider()
 
-        # ── 1. Integrated Information Flow Dashboard ───────────────────────────
+        # == 1. Integrated Information Flow Dashboard ===========================
         flow_delta = np.sum(flow_x_to_y) - np.sum(flow_y_to_x)
         leadership_label = cand_sym if flow_delta > 0.005 else (target_sym if flow_delta < -0.005 else "Neutral (Coupled)")
         
@@ -135,7 +135,7 @@ else:
             
         st.plotly_chart(fig_gc, use_container_width=True)
         
-        # ── 2. Spectral Flow Audit (Causal Tables) ─────────────────────
+        # == 2. Spectral Flow Audit (Causal Tables) =====================
         st.divider()
         col_l, col_r = st.columns([1, 1.2])
         
@@ -150,7 +150,7 @@ else:
         with col_r:
             st.subheader("Causal Flow Intelligence")
             st.markdown(f"""
-            **Clinical Profile**:
+            **Audit Profile**:
             The information transfer from **{cand_sym}** to **{target_sym}** is currently classified as **{regime}**. 
             
             **Tactical Implication**:

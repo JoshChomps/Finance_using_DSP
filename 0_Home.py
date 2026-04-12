@@ -14,11 +14,11 @@ st.set_page_config(
 
 inject_custom_css(st)
 
-# ── Header ───────────────────────────────────────────────────────────────────
+# == Header ===================================================================
 st.title("Market DNA: Tactical Command Center")
 st.subheader("Institutional Signal Extraction & Spectral Intelligence Hub")
 
-# ── Sidebar Selection ────────────────────────────────────────────────────────
+# == Sidebar Selection ========================================================
 st.sidebar.header("Command Controls")
 asset_options = ["SPY", "QQQ", "GLD", "TLT", "AAPL", "MSFT", "NVDA", "BTC-USD", "ETH-USD"]
 selected_assets = st.sidebar.multiselect(
@@ -32,22 +32,22 @@ st.sidebar.divider()
 st.sidebar.markdown('**Market DNA: Alpha Synthesis**')
 st.sidebar.success("Institutional Integrity Verified")
 
-# ── Mermaid Helper ──────────────────────────────────────────────────────────
+# == Mermaid Helper ==========================================================
 def render_mermaid(code: str):
     components.html(
         f"""
-        <div class="mermaid">
+        <div class="mermaid" style="height: 100%; width: 100%; overflow: auto;">
             {code}
         </div>
         <script type="module">
             import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
-            mermaid.initialize({{ startOnLoad: true, theme: 'dark' }});
+            mermaid.initialize({{ startOnLoad: true, theme: 'dark', flowchart: {{ useMaxWidth: false }} }});
         </script>
         """,
-        height=400,
+        height=500,
     )
 
-# ── Master Signal Scan (The HUD) ──────────────────────────────────────────────
+# == Master Signal Scan (The HUD) ==============================================
 st.divider()
 st.subheader("Master Signal Scan: Global Regime Audit")
 
@@ -77,13 +77,17 @@ if selected_assets:
         results = scan_core_assets(selected_assets)
 
     if results:
-        cols = st.columns(len(results))
-        for i, res in enumerate(results):
-            with cols[i]:
-                color = "#00ff41" if res['Bias'] == "UP" else "#ff4b4b"
-                st.markdown(f"**{res['Asset']}**")
-                st.metric(res['Regime'], f"{res['Sync Force']:.2f}", delta=res['Bias'], delta_color="normal")
-                st.caption("Structural Flow Status")
+        # Institutional Grid Wrapping (4 assets per row)
+        cols_per_row = 4
+        for i in range(0, len(results), cols_per_row):
+            row_items = results[i : i + cols_per_row]
+            cols = st.columns(len(row_items))
+            for j, res in enumerate(row_items):
+                with cols[j]:
+                    color = "#00ff41" if res['Bias'] == "UP" else "#ff4b4b"
+                    st.markdown(f"**{res['Asset']}**")
+                    st.metric(res['Regime'], f"{res['Sync Force']:.2f}", delta=res['Bias'], delta_color="normal")
+                    st.caption("Structural Flow Status")
     else:
         st.error("Protocol Error: Global Scan Offline.")
 else:
@@ -91,11 +95,11 @@ else:
 
 st.divider()
 
-# ── Strategy Decision Manual ──────────────────────────────────────────────────
+# == Strategy Decision Manual ==================================================
 col_man, col_flow = st.columns([1.5, 1])
 
 with col_man:
-    st.markdown("### 📘 Strategy Decision Manual")
+    st.markdown("### Strategy Decision Manual")
     with st.expander("Analysis Step 01: Identification (Decomposition)", expanded=True):
         st.write("""
         **Action**: Navigate to the Decomposition Explorer.
@@ -115,13 +119,13 @@ with col_man:
     with st.expander("Analysis Step 03: Verification (Backtesting)"):
         st.write("""
         **Action**: Navigate to the Backtesting Simulator.
-        **Goal**: Clinical audit. Does this lead/lag relationship actually make money?
+        **Goal**: Performance audit. Does this lead/lag relationship actually show profit?
         - **IF** 'Robust Resonance Capture', deploy capital using Kelly sizing.
         - **IF** 'Spectral Decay', reject the strategy : the signal is overfitting.
         """)
 
 with col_flow:
-    st.markdown("### ⚙️ Signal Processing Pipeline")
+    st.markdown("### Signal Processing Pipeline")
     render_mermaid("""
     graph TD
         A[Raw Market Data] --> B[Multiresolution Analysis]
@@ -129,7 +133,7 @@ with col_flow:
         C -->|Stance| D[Decomposition]
         C -->|Precedence| E[Coherence]
         C -->|Flow| F[Causality]
-        D --> G[Clinical Verdict]
+        D --> G[Strategy Verdict]
         E --> G
         F --> G
         G --> H[Backtest Sim]
@@ -138,10 +142,10 @@ with col_flow:
 
 st.divider()
 
-# ── Operational Integrity ──────────────────────────────────────────────────────
-st.subheader("Operational Integrity (Market DNA Prime)")
+# == Operational Integrity ======================================================
+st.subheader("Operational Integrity")
 c1, c2, c3, c4 = st.columns(4)
 c1.metric("Intelligence Layer", "Active", "7 Engines")
 c2.metric("Tactical Manual", "V1.0 Certified", "IF/THEN Logic")
 c3.metric("Data Lake", manager.provider.__class__.__name__, "Pilot Scale")
-c4.metric("Clinical Standard", "Slate-Carbon", "Phase 37")
+c4.metric("Operational Standard", "Slate-Carbon", "Phase 41")
