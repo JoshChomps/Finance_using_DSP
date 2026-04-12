@@ -1,3 +1,14 @@
+---
+title: Market DNA Engine
+emoji: 📊
+colorFrom: gray
+colorTo: green
+sdk: streamlit
+app_file: 0_Home.py
+pinned: false
+license: mit
+---
+
 # Market DNA Engine
 ### Institutional Digital Signal Processing for Technical Alpha
 
