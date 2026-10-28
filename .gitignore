@@ -1,0 +1,17 @@
+.venv/
+data/cache/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Local environment config - keep secrets out of git
+.env
+
+# Local-only files: AI tool configs, interview notes, secrets, editor locks
+CLAUDE.md
+AGENTS.md
+.claude/
+PROF_QA.md
+HANDOFF*.md
+.env
+*.lck
