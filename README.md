@@ -43,7 +43,7 @@ The engine is built on a modular data-agnostic layer. It defaults to public Yaho
 - **DSP Core**: PyWavelets, ssqueezepy, pycwt
 - **Analysis**: Statsmodels, Pandas, NumPy
 - **Visualization**: Plotly (Interactive Spectral Charts)
-- **Deployment**: Hugging Face Spaces, GitHub Actions
+- **Deployment**: Hugging Face Spaces
 
 ---
 
